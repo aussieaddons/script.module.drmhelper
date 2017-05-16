@@ -16,4 +16,4 @@ after_script:
   - echo "https://${GH_TOKEN}:@github.com" > .git/credentials
   - git add .
   - git commit --allow-empty -m "$TRAVIS_COMMIT_MSG"
-- git push
+  - git push
