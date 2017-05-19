@@ -22,6 +22,7 @@ import xbmcaddon
 import config
 import platform
 import requests
+import json
 import hashlib
 import uuid
 import xml.etree.ElementTree as ET
@@ -48,18 +49,27 @@ def get_addon():
     """
     try:
         addon = None
-        json_string = ('{{"jsonrpc":"2.0","id":1,"method":"Addons.SetAddon'
-                       'Enabled","params":{{"addonid":"inputstream.adaptive'
-                       '","enabled":{0}}}}}')
-        xbmc.executeJSONRPC(json_string.format('false'))
-        xbmc.executeJSONRPC(json_string.format('true'))
-        addon = xbmcaddon.Addon('inputstream.adaptive')
-    except RuntimeError:
-        try:
-            xbmc.executebuiltin('InstallAddon(inputstream.adaptive)')
+        enabled_json = ('{"jsonrpc":"2.0","id":1,"method":'
+                        '"Addons.GetAddonDetails","params":'
+                        '{"addonid":"inputstream.adaptive", '
+                        '"properties": ["enabled"]}}')
+        result = json.loads(xbmc.executeJSONRPC(enabled_json))
+        if 'error' in result:
+            try:
+                xbmc.executebuiltin('InstallAddon(inputstream.adaptive)')
+                addon = xbmcaddon.Addon('inputstream.adaptive')
+            except RuntimeError:
+                return False
+        else:
+            if result['result']['addon'].get('enabled') is False:
+                json_string = ('{"jsonrpc":"2.0","id":1,"method":'
+                               '"Addons.SetAddonEnabled","params":'
+                               '{"addonid":"inputstream.adaptive",'
+                               '"enabled":true}}')
+                xbmc.executeJSONRPC(json_string)
             addon = xbmcaddon.Addon('inputstream.adaptive')
-        except RuntimeError:
-            pass
+    except RuntimeError:
+        return False
     return addon
 
 
