@@ -78,6 +78,17 @@ def check_inputstream():
     Make sure all components required are available for DRM playback.
     Inform of missing components
     """
+    try:
+        ver = xbmc.getInfoLabel("System.BuildVersion").split(' ')[0]
+        if float(ver) < 17:
+            xbmcgui.Dialog().ok('Kodi 17+ Required',
+                                ('The minimum version of Kodi required for DRM'
+                                 'protected content is 17.0 - please upgrade '
+                                 'in order to use this feature.'))
+            return False
+    except ValueError:  # custom builds of Kodi may not follow same convention
+        pass
+
     addon = get_addon()
     if not addon:
         xbmcgui.Dialog().ok('Missing inputstream.adaptive add-on',
@@ -148,8 +159,8 @@ def get_crx_url():
                               'AppleWebKit/537.36 (KHTML, like Gecko) '
                               'Chrome/55.0.2883.87 Safari/537.36'),
                'accept-encoding': 'gzip, deflate, br'}
-    url = drmconfig.CRX_UPDATE_URL.format(nonce,
-                                       hashlib.sha256(xml_data).hexdigest())
+    url = drmconfig.CRX_UPDATE_URL.format(
+        nonce, hashlib.sha256(xml_data).hexdigest())
     req = requests.post(url, headers=headers, data=xml_data, verify=False)
     root = ET.fromstring(req.text)
     child = root.find('app')
