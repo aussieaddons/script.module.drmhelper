@@ -19,7 +19,7 @@ import posixpath
 import xbmc
 import xbmcgui
 import xbmcaddon
-import config
+import drmconfig
 import platform
 import requests
 import json
@@ -34,10 +34,10 @@ arch = platform.machine()
 if arch[:3] == 'arm':
     arch = arch[:5]
 
-if system_+arch in config.SUPPORTED_PLATFORMS:
+if system_+arch in drmconfig.SUPPORTED_PLATFORMS:
     supported = True
-    ssd_filename = config.SSD_WV_DICT[system_]
-    widevinecdm_filename = config.WIDEVINECDM_DICT[system_]
+    ssd_filename = drmconfig.SSD_WV_DICT[system_]
+    widevinecdm_filename = drmconfig.WIDEVINECDM_DICT[system_]
 else:
     supported = False
 
@@ -105,7 +105,7 @@ def check_inputstream():
     if not os.path.isfile(os.path.join(cdm_path, widevinecdm_filename)):
         msg1 = 'Missing widevinecdm module required for DRM content'
         msg2 = '{0} not found in {1}'.format(
-            config.WIDEVINECDM_DICT[system_],
+            drmconfig.WIDEVINECDM_DICT[system_],
             xbmc.translatePath(addon.getSetting('DECRYPTERPATH')))
         msg3 = ('Do you want to attempt downloading the missing widevinecdm '
                 'module for your system?')
@@ -119,7 +119,7 @@ def check_inputstream():
     if not os.path.isfile(os.path.join(cdm_path, ssd_filename)):
         msg1 = 'Missing ssd_wv module required for DRM content'
         msg2 = '{0} not found in {1}'.format(
-            config.SSD_WV_DICT[system_],
+            drmconfig.SSD_WV_DICT[system_],
             xbmc.translatePath(addon.getSetting('DECRYPTERPATH')))
         msg2 = ('Do you want to attempt downloading the missing ssd_wv '
                 'module for your system?')
@@ -141,14 +141,14 @@ def get_crx_url():
     if system_ == 'Darwin':
         os_ = 'mac'
         arch_ = 'x64'
-    xml_data = config.XML_TEMPLATE.format(uuid.uuid4(), os_, arch_)
+    xml_data = drmconfig.XML_TEMPLATE.format(uuid.uuid4(), os_, arch_)
     nonce = str(random.randint(0, 4294967296))
     headers = {'content-type': 'application/xml',
                'user-agent': ('Mozilla/5.0 (Windows NT 10.0; WOW64) '
                               'AppleWebKit/537.36 (KHTML, like Gecko) '
                               'Chrome/55.0.2883.87 Safari/537.36'),
                'accept-encoding': 'gzip, deflate, br'}
-    url = config.CRX_UPDATE_URL.format(nonce,
+    url = drmconfig.CRX_UPDATE_URL.format(nonce,
                                        hashlib.sha256(xml_data).hexdigest())
     req = requests.post(url, headers=headers, data=xml_data, verify=False)
     root = ET.fromstring(req.text)
@@ -188,7 +188,7 @@ def get_widevinecdm(cdm_path=None):
         url = get_crx_url()
         filename = 'wv_blob.zip'
     else:
-        url = config.WIDEVINECDM_URL[system_+arch]
+        url = drmconfig.WIDEVINECDM_URL[system_+arch]
         filename = url.split('/')[-1]
         xbmc.log(filename, level=xbmc.LOGNOTICE)
     if not os.path.isdir(cdm_path):
@@ -212,8 +212,8 @@ def get_widevinecdm(cdm_path=None):
     if system_ == 'Windows':
         unzip_blob(download_path, cdm_path)
     else:
-        command = config.UNARCHIVE_COMMAND[system_+arch].format(
-            filename, cdm_path, config.WIDEVINECDM_DICT[system_])
+        command = drmconfig.UNARCHIVE_COMMAND[system_+arch].format(
+            filename, cdm_path, drmconfig.WIDEVINECDM_DICT[system_])
         os.system(command)
     dp.close()
     xbmcgui.Dialog().ok('Success', '{0} successfully installed at {1}'.format(
@@ -236,7 +236,7 @@ def get_ssd_wv(cdm_path=None):
         download_path = os.path.join(cdm_path, ssd_filename)
     if os.path.isfile(download_path):
         os.remove(download_path)
-    url = posixpath.join(config.SSD_WV_REPO, system_, arch, ssd_filename)
+    url = posixpath.join(drmconfig.SSD_WV_REPO, system_, arch, ssd_filename)
     if not progress_download(url, download_path, ssd_filename):
         return
     os.chmod(download_path, 0755)
