@@ -53,14 +53,27 @@ def get_addon():
                         '"Addons.GetAddonDetails","params":'
                         '{"addonid":"inputstream.adaptive", '
                         '"properties": ["enabled"]}}')
+        # is inputstream.adaptive enabled?
         result = json.loads(xbmc.executeJSONRPC(enabled_json))
-        if 'error' in result:
-            try:
-                xbmc.executebuiltin('InstallAddon(inputstream.adaptive)')
+        if 'error' in result:  # not installed
+            try:  # see if there's an installed repo that has it
+                xbmc.executebuiltin('InstallAddon(inputstream.adaptive)', True)
                 addon = xbmcaddon.Addon('inputstream.adaptive')
             except RuntimeError:
-                return False
-        else:
+                if xbmcgui.Dialog().yesno('inputstream.adaptive not in repo',
+                                          'inputstream.adaptive not found in '
+                                          'any installed repositories. Would '
+                                          'you like to download the zip for '
+                                          'your system from a direct link '
+                                          'and install?'):
+                    if get_ia_direct():
+                        try:
+                            addon = xbmcaddon.Addon('inputstream.adaptive')
+                            xbmc.log('FOUND IT')
+                            return addon
+                        except RuntimeError:
+                            return False
+        else:  # installed but not enabled. let's enable it.
             if result['result']['addon'].get('enabled') is False:
                 json_string = ('{"jsonrpc":"2.0","id":1,"method":'
                                '"Addons.SetAddonEnabled","params":'
@@ -73,30 +86,12 @@ def get_addon():
     return addon
 
 
-def check_inputstream():
+def is_supported():
     """
-    Make sure all components required are available for DRM playback.
-    Inform of missing components
+    Returns true if we're on a platform that has a cdm module and
+    can interface with the decrypter module.
+    i.e not Android or armv6 (RPi1)
     """
-    try:
-        ver = xbmc.getInfoLabel("System.BuildVersion").split(' ')[0]
-        if float(ver) < 17:
-            xbmcgui.Dialog().ok('Kodi 17+ Required',
-                                ('The minimum version of Kodi required for DRM'
-                                 'protected content is 17.0 - please upgrade '
-                                 'in order to use this feature.'))
-            return False
-    except ValueError:  # custom builds of Kodi may not follow same convention
-        pass
-
-    addon = get_addon()
-    if not addon:
-        xbmcgui.Dialog().ok('Missing inputstream.adaptive add-on',
-                            ('inputstream.adaptive VideoPlayer InputStream'
-                             'add-on not found or not enabled. This add-on '
-                             'is required to view DRM protected content.'))
-        return False
-
     if not supported:
         xbmcgui.Dialog().ok('OS/Arch not supported',
                             '{0} {1} not supported for DRM playblack'.format(
@@ -109,6 +104,35 @@ def check_inputstream():
         xbmcgui.Dialog().ok('Android not supported',
                             'Android not supported for DRM playblack')
         xbmc.log('Android not supported for DRM playback', xbmc.LOGNOTICE)
+        return False
+    return True
+
+
+def check_inputstream():
+    """
+    Main function call to check all components required are available for
+    DRM playback before setting the resolved URL in Kodi.
+    """
+    try:
+        ver = xbmc.getInfoLabel("System.BuildVersion").split(' ')[0]
+        if float(ver) < 17:
+            xbmcgui.Dialog().ok('Kodi 17+ Required',
+                                ('The minimum version of Kodi required for DRM'
+                                 'protected content is 17.0 - please upgrade '
+                                 'in order to use this feature.'))
+            return False
+    except ValueError:  # custom builds of Kodi may not follow same convention
+        pass
+
+    if not is_supported():
+        return False
+
+    addon = get_addon()
+    if not addon:
+        xbmcgui.Dialog().ok('Missing inputstream.adaptive add-on',
+                            ('inputstream.adaptive VideoPlayer InputStream '
+                             'add-on not found or not enabled. This add-on '
+                             'is required to view DRM protected content.'))
         return False
 
     cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
@@ -172,7 +196,7 @@ def get_crx_url():
 
 def unzip_blob(file, cdm_path):
     """
-    extract windows 32bit widevinecdm.dll from crx in path 'file'
+    extract windows 32bit widevinecdm.dll from chrome crx blob in path 'file'
     """
     with zipfile.ZipFile(file) as zf:
         print file[:file.find(file.split('/')[-1])]
@@ -267,7 +291,7 @@ def get_ssd_wv(cdm_path=None):
 
 def progress_download(url, download_path, filename):
     """
-    Download file in with Kodi progress bar
+    Download file in Kodi with progress bar
     """
     xbmc.log('Downloading {0}'.format(url), xbmc.LOGNOTICE)
     try:
@@ -300,3 +324,40 @@ def progress_download(url, download_path, filename):
         int(total_length), download_path), xbmc.LOGNOTICE)
     dp.close()
     return True
+
+
+def get_ia_direct():
+    """
+    Download inputstream.adaptive zip file from remote repository and save in
+    Kodi's 'home' folder, unzip to addons folder.
+    """
+    if not is_supported():
+        return False
+
+    url = drmconfig.ADAPTIVE_URL[system_+arch]
+    filename = url.split('/')[-1]
+    location = os.path.join(xbmc.translatePath('special://home'), filename)
+    xbmc.log(location, level=xbmc.LOGDEBUG)
+    if not progress_download(url, location, filename):
+        xbmcgui.Dialog().ok('Download Failed', 'Failed to download {0} from '
+                            '{1}'.format(filename, url))
+        return False
+    else:
+        try:
+            with zipfile.ZipFile(location, "r") as z:
+                ia_path = os.path.join(xbmc.translatePath('special://home'),
+                                       'addons')
+                z.extractall(ia_path)
+            xbmc.executebuiltin('UpdateLocalAddons', True)
+            #  enable addon, seems to default to disabled
+            json_string = ('{"jsonrpc":"2.0","id":1,"method":'
+                           '"Addons.SetAddonEnabled","params":'
+                           '{"addonid":"inputstream.adaptive",'
+                           '"enabled":true}}')
+            xbmc.executeJSONRPC(json_string)
+            xbmcgui.Dialog().ok('Installation complete',
+                                'inputstream.adaptive installed.')
+        except:
+            xbmcgui.Dialog().ok('Unzipping failed', 'Unzipping failed')
+        os.remove(location)
+        return True

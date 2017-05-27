@@ -34,3 +34,10 @@ version="0.0.0.0" installsource="ondemand"><updatecheck/><ping rd="-2"
 ping_freshness=""/></app></request>"""
 
 CRX_UPDATE_URL = "https://clients2.google.com/service/update2?cup2key=6:{0}&cup2hreq={1}"
+
+ADAPTIVE_URL = {'WindowsAMD64': 'https://github.com/vdrtuxnet/binary-repo/raw/master/WIN_32/inputstream.adaptive/inputstream.adaptive-1.0.8.zip',
+                        'Windowsx86': 'https://github.com/vdrtuxnet/binary-repo/raw/master/WIN_32/inputstream.adaptive/inputstream.adaptive-1.0.8.zip',
+                        'Darwinx86_64': 'https://github.com/vdrtuxnet/binary-repo/raw/master/OSX_64/inputstream.adaptive/inputstream.adaptive-1.0.7.zip',
+                        'Linuxx86_64': 'https://github.com/vdrtuxnet/binary-repo/raw/master/Generic_x68_64/inputstream.adaptive/inputstream.adaptive-1.0.8.1.zip',
+                        'Linuxarmv7': 'https://github.com/vdrtuxnet/binary-repo/raw/master/RPi2/inputstream.adaptive/inputstream.adaptive-1.0.8.zip',
+                        'Linuxarmv8': 'https://github.com/vdrtuxnet/binary-repo/raw/master/RPi2/inputstream.adaptive/inputstream.adaptive-1.0.8.zip'}
