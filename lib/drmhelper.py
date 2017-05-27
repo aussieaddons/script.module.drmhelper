@@ -194,6 +194,11 @@ def get_widevinecdm(cdm_path=None):
     """
     if not cdm_path:
         addon = get_addon()
+        if not addon:
+            xbmcgui.Dialog().ok('inputstream.adaptive not found',
+                                'inputstream.adaptive add-on must be installed'
+                                ' before installing widevide_cdm module')
+            return
         cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
     if system_ == 'Windows' or system_ == 'Darwin':
         url = get_crx_url()
@@ -237,6 +242,11 @@ def get_ssd_wv(cdm_path=None):
     """
     if not cdm_path:
         addon = get_addon()
+        if not addon:
+            xbmcgui.Dialog().ok('inputstream.adaptive not found',
+                                'inputstream.adaptive add-on must be installed'
+                                ' before installing ssd_wv module')
+            return
         cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
     if not os.path.isdir(cdm_path):
         os.makedirs(cdm_path)
