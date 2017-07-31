@@ -69,7 +69,6 @@ def get_addon():
                     if get_ia_direct():
                         try:
                             addon = xbmcaddon.Addon('inputstream.adaptive')
-                            xbmc.log('FOUND IT')
                             return addon
                         except RuntimeError:
                             return False
