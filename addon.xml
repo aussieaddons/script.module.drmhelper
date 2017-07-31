@@ -28,12 +28,5 @@
 
 [B]Version v1.0.0[/B]
 - Initial version
-</news></extension>
-  <news>[B]Version 1.0.1[/B]
-- Feature to get i.a from direct link and install.
-- Catch error when trying to install modules without i.a
-- Add error message for Kodi &lt; 17.0
-- Add config
-- Improvement in checking for inputstream.adaptive
 </news>
 </addon>
