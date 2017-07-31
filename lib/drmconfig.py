@@ -18,11 +18,15 @@ WIDEVINECDM_DICT = {'Windows': 'widevinecdm.dll',
                     'Linux': 'libwidevinecdm.so',
                     'Darwin': 'libwidevinecdm.dylib'}
 
-SUPPORTED_PLATFORMS = ['Windowsx86',
+SUPPORTED_PLATFORMS = ['WindowsAMD64',
+                       'Windowsx86',
                        'Darwinx86_64',
                        'Linuxx86_64',
                        'Linuxarmv7',
                        'Linuxarmv8']
+                       
+WINDOWS_BITNESS = {'x32': 'x86',
+                   'x64': 'AMD64'}
 
 XML_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?><request protocol="3.0" 
 version="chrome-55.0.2883.87" prodversion="55.0.2883.87" requestid="{{{0}}}" 

@@ -34,6 +34,17 @@ arch = platform.machine()
 if arch[:3] == 'arm':
     arch = arch[:5]
 
+#  there doesn't seem to yet be a way to determine Kodi Windows bitness,
+#  so let's use this little hack from the log file
+if system_ == 'Windows':
+    if arch == 'AMD64':
+        with open(xbmc.translatePath('special://home/kodi.log')) as f:
+            for i, line in enumerate(f):
+                if i == 3:
+                    bitness = line.split()[-2]
+                    break
+        arch = drmconfig.WINDOWS_BITNESS[bitness]
+
 if system_+arch in drmconfig.SUPPORTED_PLATFORMS:
     supported = True
     ssd_filename = drmconfig.SSD_WV_DICT[system_]
