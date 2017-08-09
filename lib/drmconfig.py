@@ -38,3 +38,5 @@ ADAPTIVE_URL = {'WindowsAMD64': 'https://github.com/vdrtuxnet/binary-repo/raw/ma
                         'Linuxx86_64': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/linux_x68_64/inputstream.adaptive/inputstream.adaptive-1.0.8.1.zip',
                         'Linuxarmv7': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/armv7/inputstream.adaptive/inputstream.adaptive-1.0.8.zip',
                         'Linuxarmv8': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/armv7/inputstream.adaptive/inputstream.adaptive-1.0.8.zip'}
+
+MIN_IA_VERSION = '1.0.7'
