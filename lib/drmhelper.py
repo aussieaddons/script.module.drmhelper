@@ -23,11 +23,9 @@ import drmconfig
 import platform
 import requests
 import json
-import hashlib
-import uuid
-import xml.etree.ElementTree as ET
-import random
 import zipfile
+import shutil
+from distutils.version import LooseVersion
 
 system_ = platform.system()
 arch = platform.machine()
@@ -58,41 +56,59 @@ def get_addon():
     Check if inputstream.adaptive is installed, attempt to install if not.
     Enable inpustream.adaptive addon.
     """
+    def manual_install():
+        if get_ia_direct():
+            try:
+                addon = xbmcaddon.Addon('inputstream.adaptive')
+                return addon
+            except RuntimeError:
+                return False
+
+    addon = None
     try:
-        addon = None
         enabled_json = ('{"jsonrpc":"2.0","id":1,"method":'
                         '"Addons.GetAddonDetails","params":'
                         '{"addonid":"inputstream.adaptive", '
                         '"properties": ["enabled"]}}')
         # is inputstream.adaptive enabled?
         result = json.loads(xbmc.executeJSONRPC(enabled_json))
-        if 'error' in result:  # not installed
-            try:  # see if there's an installed repo that has it
-                xbmc.executebuiltin('InstallAddon(inputstream.adaptive)', True)
-                addon = xbmcaddon.Addon('inputstream.adaptive')
-            except RuntimeError:
-                if xbmcgui.Dialog().yesno('inputstream.adaptive not in repo',
-                                          'inputstream.adaptive not found in '
-                                          'any installed repositories. Would '
-                                          'you like to download the zip for '
-                                          'your system from a direct link '
-                                          'and install?'):
-                    if get_ia_direct():
-                        try:
-                            addon = xbmcaddon.Addon('inputstream.adaptive')
-                            return addon
-                        except RuntimeError:
-                            return False
-        else:  # installed but not enabled. let's enable it.
-            if result['result']['addon'].get('enabled') is False:
-                json_string = ('{"jsonrpc":"2.0","id":1,"method":'
-                               '"Addons.SetAddonEnabled","params":'
-                               '{"addonid":"inputstream.adaptive",'
-                               '"enabled":true}}')
-                xbmc.executeJSONRPC(json_string)
-            addon = xbmcaddon.Addon('inputstream.adaptive')
     except RuntimeError:
         return False
+
+    if 'error' in result:  # not installed
+        try:  # see if there's an installed repo that has it
+            xbmc.executebuiltin('InstallAddon(inputstream.adaptive)', True)
+            addon = xbmcaddon.Addon('inputstream.adaptive')
+        except RuntimeError:
+            if xbmcgui.Dialog().yesno('inputstream.adaptive not in repo',
+                                      'inputstream.adaptive not found in '
+                                      'any installed repositories. Would '
+                                      'you like to download the zip for '
+                                      'your system from a direct link '
+                                      'and install?'):
+                addon = manual_install()
+
+    else:  # installed but not enabled. let's enable it.
+        if result['result']['addon'].get('enabled') is False:
+            json_string = ('{"jsonrpc":"2.0","id":1,"method":'
+                           '"Addons.SetAddonEnabled","params":'
+                           '{"addonid":"inputstream.adaptive",'
+                           '"enabled":true}}')
+            try:
+                xbmc.executeJSONRPC(json_string)
+            except RuntimeError:
+                return False
+        addon = xbmcaddon.Addon('inputstream.adaptive')
+
+    ver = addon.getAddonInfo('version')
+    if LooseVersion(ver) < LooseVersion(drmconfig.MIN_IA_VERSION):
+        if xbmcgui.Dialog().yesno('inputstream.adaptive version lower than '
+                                  'required', 'inputstream.adaptive version '
+                                  'does not meet requirements. Would '
+                                  'you like to download the zip for '
+                                  'the required version from a direct link '
+                                  'and install?'):
+            addon = manual_install()
     return addon
 
 
@@ -100,20 +116,18 @@ def is_supported():
     """
     Returns true if we're on a platform that has a cdm module and
     can interface with the decrypter module.
-    i.e not Android or armv6 (RPi1)
+    i.e not armv6 (RPi1)
     """
+    # Android now supported
+    if xbmc.getCondVisibility('system.platform.android'):
+        return True
+
     if not supported:
         xbmcgui.Dialog().ok('OS/Arch not supported',
                             '{0} {1} not supported for DRM playblack'.format(
                                 system_, arch))
         xbmc.log('{0} {1} not supported for DRM playback'.format(
             system_, arch), xbmc.LOGNOTICE)
-        return False
-
-    if xbmc.getCondVisibility('system.platform.android'):
-        xbmcgui.Dialog().ok('Android not supported',
-                            'Android not supported for DRM playblack')
-        xbmc.log('Android not supported for DRM playback', xbmc.LOGNOTICE)
         return False
     return True
 
@@ -175,49 +189,15 @@ def check_inputstream():
     return True
 
 
-def get_crx_url():
+def unzip_cdm(zpath, cdm_path):
     """
-    Send Chrome extension update request to google, take first url from
-    returned xml data
+    extract windows 32bit widevinecdm.dll from downloaded zip
     """
-    if system_ == 'Windows':
-        os_ = 'win'
-        arch_ = 'x86'
-    if system_ == 'Darwin':
-        os_ = 'mac'
-        arch_ = 'x64'
-    xml_data = drmconfig.XML_TEMPLATE.format(uuid.uuid4(), os_, arch_)
-    nonce = str(random.randint(0, 4294967296))
-    headers = {'content-type': 'application/xml',
-               'user-agent': ('Mozilla/5.0 (Windows NT 10.0; WOW64) '
-                              'AppleWebKit/537.36 (KHTML, like Gecko) '
-                              'Chrome/55.0.2883.87 Safari/537.36'),
-               'accept-encoding': 'gzip, deflate, br'}
-    url = drmconfig.CRX_UPDATE_URL.format(
-        nonce, hashlib.sha256(xml_data).hexdigest())
-    req = requests.post(url, headers=headers, data=xml_data, verify=False)
-    root = ET.fromstring(req.text)
-    child = root.find('app')
-    subchild = child.find('updatecheck')
-    sschild = subchild.find('urls')
-    elem = sschild.find('url')
-    return elem.get('codebase')
-
-
-def unzip_blob(file, cdm_path):
-    """
-    extract windows 32bit widevinecdm.dll from chrome crx blob in path 'file'
-    """
-    with zipfile.ZipFile(file) as zf:
-        print file[:file.find(file.split('/')[-1])]
+    with zipfile.ZipFile(zpath) as zf:
         with open(posixpath.join(cdm_path, widevinecdm_filename), 'wb') as f:
-            if system_ == 'Windows':
-                data = zf.read('_platform_specific/win_x86/widevinecdm.dll')
-            if system_ == 'Mac':
-                data = zf.read(('_platform_specific/mac_x64/'
-                                'libwidevinecdm.dylib'))
+            data = zf.read('widevinecdm.dll')
             f.write(data)
-    os.remove(file)
+    os.remove(zpath)
 
 
 def get_widevinecdm(cdm_path=None):
@@ -234,33 +214,31 @@ def get_widevinecdm(cdm_path=None):
                                 ' before installing widevide_cdm module')
             return
         cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
-    if system_ == 'Windows' or system_ == 'Darwin':
-        url = get_crx_url()
-        filename = 'wv_blob.zip'
-    else:
-        url = drmconfig.WIDEVINECDM_URL[system_+arch]
-        filename = url.split('/')[-1]
-        xbmc.log(filename, level=xbmc.LOGNOTICE)
+
+    if xbmc.getCondVisibility('system.platform.android'):
+        xbmcgui.Dialog().ok('Not required for Android',
+                            'This module is not required for Android')
+        return
+
+    url = drmconfig.WIDEVINECDM_URL[system_+arch]
+    filename = url.split('/')[-1]
+
     if not os.path.isdir(cdm_path):
         os.makedirs(cdm_path)
     if os.path.isfile(os.path.join(cdm_path, widevinecdm_filename)):
         os.remove(os.path.join(cdm_path, widevinecdm_filename))
+
     download_path = os.path.join(cdm_path, filename)
     if not progress_download(url, download_path, widevinecdm_filename):
         return
-    if system_ == 'Windows':  # remove crx header
-        with open(download_path, 'rb+') as f:
-            data = f.read()
-            start_index = data.find(b'\x50\x4b\x03\x04')
-            f.seek(0)
-            f.write(data[start_index:])
-            f.truncate()
+
     dp = xbmcgui.DialogProgress()
     dp.create('Extracting {0}'.format(widevinecdm_filename),
               'Extracting {0} from {1}'.format(widevinecdm_filename, filename))
     dp.update(0)
+
     if system_ == 'Windows':
-        unzip_blob(download_path, cdm_path)
+        unzip_cdm(download_path, cdm_path)
     else:
         command = drmconfig.UNARCHIVE_COMMAND[system_+arch].format(
             filename, cdm_path, drmconfig.WIDEVINECDM_DICT[system_])
@@ -282,6 +260,12 @@ def get_ssd_wv(cdm_path=None):
                                 ' before installing ssd_wv module')
             return
         cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
+
+    if xbmc.getCondVisibility('system.platform.android'):
+        xbmcgui.Dialog().ok('Not required for Android',
+                            'This module is not required for Android')
+        return
+
     if not os.path.isdir(cdm_path):
         os.makedirs(cdm_path)
     ssd = os.path.join(cdm_path, ssd_filename)
@@ -299,7 +283,7 @@ def get_ssd_wv(cdm_path=None):
         ssd_filename, download_path))
 
 
-def progress_download(url, download_path, filename):
+def progress_download(url, download_path, display_filename=None):
     """
     Download file in Kodi with progress bar
     """
@@ -316,7 +300,9 @@ def progress_download(url, download_path, filename):
 
     total_length = float(res.headers.get('content-length'))
     dp = xbmcgui.DialogProgress()
-    dp.create("Downloading {0}".format(filename),
+    if not display_filename:
+        display_filename = download_path.split()[-1]
+    dp.create("Downloading {0}".format(display_filename),
               "Downloading File", url)
 
     with open(download_path, 'wb') as f:
@@ -357,6 +343,7 @@ def get_ia_direct():
             with zipfile.ZipFile(location, "r") as z:
                 ia_path = os.path.join(xbmc.translatePath('special://home'),
                                        'addons')
+                shutil.rmtree(os.path.join(ia_path, 'inputstream.adaptive'))
                 z.extractall(ia_path)
             xbmc.executebuiltin('UpdateLocalAddons', True)
             #  enable addon, seems to default to disabled
@@ -367,7 +354,8 @@ def get_ia_direct():
             xbmc.executeJSONRPC(json_string)
             xbmcgui.Dialog().ok('Installation complete',
                                 'inputstream.adaptive installed.')
-        except:
-            xbmcgui.Dialog().ok('Unzipping failed', 'Unzipping failed')
+        except Exception as e:
+            xbmcgui.Dialog().ok('Unzipping failed',
+                                'Unzipping failed error {0}'.format(e))
         os.remove(location)
         return True
