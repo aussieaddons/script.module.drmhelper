@@ -32,16 +32,8 @@ arch = platform.machine()
 if arch[:3] == 'arm':
     arch = arch[:5]
 
-#  there doesn't seem to yet be a way to determine Kodi Windows bitness,
-#  so let's use this little hack from the log file
 if system_ == 'Windows':
-    if arch == 'AMD64':
-        with open(xbmc.translatePath('special://home/kodi.log')) as f:
-            for i, line in enumerate(f):
-                if i == 3:
-                    bitness = line.split()[-2]
-                    break
-        arch = drmconfig.WINDOWS_BITNESS[bitness]
+    arch = drmconfig.WINDOWS_BITNESS[platform.architecture()[0]]
 
 if system_+arch in drmconfig.SUPPORTED_PLATFORMS:
     supported = True
@@ -51,13 +43,31 @@ else:
     supported = False
 
 
+def get_kodi_version():
+    """
+    Return simple version number for easy numerical comparison
+    """
+    fullver = xbmc.getInfoLabel("System.BuildVersion").split(' ')[0]
+    ver = fullver[:fullver.find('-')]
+    return float(ver)
+
+
+def get_kodi_date():
+    """
+    Return Kodi git date from build
+    """
+    git_string = xbmc.getInfoLabel("System.BuildVersion").split(' ')[1]
+    date = git_string[git_string.find(':')+1:git_string.find('-')]
+    return date
+
+
 def get_addon():
     """
     Check if inputstream.adaptive is installed, attempt to install if not.
     Enable inpustream.adaptive addon.
     """
-    def manual_install():
-        if get_ia_direct():
+    def manual_install(update=False):
+        if get_ia_direct(update):
             try:
                 addon = xbmcaddon.Addon('inputstream.adaptive')
                 return addon
@@ -100,15 +110,16 @@ def get_addon():
                 return False
         addon = xbmcaddon.Addon('inputstream.adaptive')
 
-    ver = addon.getAddonInfo('version')
-    if LooseVersion(ver) < LooseVersion(drmconfig.MIN_IA_VERSION):
+    ia_ver = addon.getAddonInfo('version')
+    if LooseVersion(ia_ver) < LooseVersion(
+        drmconfig.MIN_IA_VERSION[get_kodi_version()[:2]]):
         if xbmcgui.Dialog().yesno('inputstream.adaptive version lower than '
                                   'required', 'inputstream.adaptive version '
                                   'does not meet requirements. Would '
                                   'you like to download the zip for '
                                   'the required version from a direct link '
-                                  'and install?'):
-            addon = manual_install()
+                                  'and reinstall?'):
+            addon = manual_install(update=True)
     return addon
 
 
@@ -138,8 +149,8 @@ def check_inputstream():
     DRM playback before setting the resolved URL in Kodi.
     """
     try:
-        ver = xbmc.getInfoLabel("System.BuildVersion").split(' ')[0]
-        if float(ver) < 17:
+        ver = get_kodi_version()
+        if ver < 17.0:
             xbmcgui.Dialog().ok('Kodi 17+ Required',
                                 ('The minimum version of Kodi required for DRM'
                                  'protected content is 17.0 - please upgrade '
@@ -158,6 +169,9 @@ def check_inputstream():
                              'add-on not found or not enabled. This add-on '
                              'is required to view DRM protected content.'))
         return False
+
+    if xbmc.getCondVisibility('system.platform.android'):
+        return True
 
     cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
 
@@ -322,7 +336,7 @@ def progress_download(url, download_path, display_filename=None):
     return True
 
 
-def get_ia_direct():
+def get_ia_direct(update=False):
     """
     Download inputstream.adaptive zip file from remote repository and save in
     Kodi's 'home' folder, unzip to addons folder.
@@ -343,7 +357,9 @@ def get_ia_direct():
             with zipfile.ZipFile(location, "r") as z:
                 ia_path = os.path.join(xbmc.translatePath('special://home'),
                                        'addons')
-                shutil.rmtree(os.path.join(ia_path, 'inputstream.adaptive'))
+                if update:
+                    shutil.rmtree(
+                        os.path.join(ia_path, 'inputstream.adaptive'))
                 z.extractall(ia_path)
             xbmc.executebuiltin('UpdateLocalAddons', True)
             #  enable addon, seems to default to disabled

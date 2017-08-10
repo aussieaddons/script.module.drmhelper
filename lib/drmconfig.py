@@ -29,14 +29,16 @@ SUPPORTED_PLATFORMS = ['WindowsAMD64',
                        'Linuxarmv7',
                        'Linuxarmv8']
                        
-WINDOWS_BITNESS = {'x32': 'x86',
-                   'x64': 'AMD64'}
+WINDOWS_BITNESS = {'32bit': 'x86',
+                   '64bit': 'AMD64'}
 
 ADAPTIVE_URL = {'WindowsAMD64': 'https://github.com/vdrtuxnet/binary-repo/raw/master/WIN_32/inputstream.adaptive/inputstream.adaptive-1.0.8.zip',
-                        'Windowsx86': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/win_32/inputstream.adaptive/inputstream.adaptive-1.0.8.zip',
-                        'Darwinx86_64': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/osx_64/inputstream.adaptive/inputstream.adaptive-1.0.7.zip',
-                        'Linuxx86_64': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/linux_x68_64/inputstream.adaptive/inputstream.adaptive-1.0.8.1.zip',
-                        'Linuxarmv7': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/armv7/inputstream.adaptive/inputstream.adaptive-1.0.8.zip',
-                        'Linuxarmv8': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/armv7/inputstream.adaptive/inputstream.adaptive-1.0.8.zip'}
+                'Windowsx86': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/win_32/inputstream.adaptive/inputstream.adaptive-1.0.8.zip',
+                'Darwinx86_64': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/osx_64/inputstream.adaptive/inputstream.adaptive-1.0.7.zip',
+                'Linuxx86_64': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/linux_x68_64/inputstream.adaptive/inputstream.adaptive-1.0.8.1.zip',
+                'Linuxarmv7': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/armv7/inputstream.adaptive/inputstream.adaptive-1.0.8.zip',
+                'Linuxarmv8': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/armv7/inputstream.adaptive/inputstream.adaptive-1.0.8.zip'}
 
-MIN_IA_VERSION = '1.0.7'
+MIN_IA_VERSION = {17: '1.0.7', 18: '2.0.7'}
+
+MIN_LEIA_DATE = 20170808
