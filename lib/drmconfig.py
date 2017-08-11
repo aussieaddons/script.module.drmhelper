@@ -9,9 +9,9 @@ WIDEVINECDM_URL = {'Linuxx86_64': 'https://dl.google.com/widevine-cdm/903-linux-
                    'Windowsx86': 'https://dl.google.com/widevine-cdm/903-win-ia32.zip',
                    'Darwinx86_64': 'https://dl.google.com/widevine-cdm/903-mac-x64.zip'}
 
-UNARCHIVE_COMMAND = {'Linuxx86_64': "(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})",
-                     'Linuxarmv7': "(cd {1} && tar xJfO {0} usr/lib/chromium/libwidevinecdm.so >{1}/{2} && chmod 755 {1}/{2} && rm -f {0})",
-                     'Linuxarmv8': "(cd {1} && tar xJfO {0} usr/lib/chromium/libwidevinecdm.so >{1}/{2} && chmod 755 {1}/{2} && rm -f {0})",
+UNARCHIVE_COMMAND = {'Linuxx86_64': '(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})',
+                     'Linuxarmv7': '(cd {1} && tar xJfO {0} usr/lib/chromium/libwidevinecdm.so >{1}/{2} && chmod 755 {1}/{2} && rm -f {0})',
+                     'Linuxarmv8': '(cd {1} && tar xJfO {0} usr/lib/chromium/libwidevinecdm.so >{1}/{2} && chmod 755 {1}/{2} && rm -f {0})',
                      'Darwinx86_64': '(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})'}
 
 SSD_WV_DICT = {'Windows': 'ssd_wv.dll',
@@ -39,6 +39,6 @@ ADAPTIVE_URL = {'WindowsAMD64': 'https://github.com/vdrtuxnet/binary-repo/raw/ma
                 'Linuxarmv7': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/armv7/inputstream.adaptive/inputstream.adaptive-1.0.8.zip',
                 'Linuxarmv8': 'https://github.com/glennguy/binary-repo-test/raw/master/kodi-17/armv7/inputstream.adaptive/inputstream.adaptive-1.0.8.zip'}
 
-MIN_IA_VERSION = {17: '1.0.7', 18: '2.0.7'}
+MIN_IA_VERSION = {'17': '1.0.7', '18': '2.0.7'}
 
 MIN_LEIA_DATE = 20170808

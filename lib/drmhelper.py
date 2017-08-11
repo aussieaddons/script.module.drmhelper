@@ -25,6 +25,7 @@ import requests
 import json
 import zipfile
 import shutil
+from pipes import quote
 from distutils.version import LooseVersion
 
 system_ = platform.system()
@@ -45,11 +46,11 @@ else:
 
 def get_kodi_version():
     """
-    Return simple version number for easy numerical comparison
+    Return plain version number as string
     """
     fullver = xbmc.getInfoLabel("System.BuildVersion").split(' ')[0]
     ver = fullver[:fullver.find('-')]
-    return float(ver)
+    return ver
 
 
 def get_kodi_date():
@@ -182,8 +183,6 @@ def check_inputstream():
             xbmc.translatePath(addon.getSetting('DECRYPTERPATH')))
         msg3 = ('Do you want to attempt downloading the missing widevinecdm '
                 'module for your system?')
-        print type(msg1)
-        print type(msg2)
         if xbmcgui.Dialog().yesno(msg1, msg2, msg3):
             get_widevinecdm(cdm_path)
         else:
@@ -255,7 +254,9 @@ def get_widevinecdm(cdm_path=None):
         unzip_cdm(download_path, cdm_path)
     else:
         command = drmconfig.UNARCHIVE_COMMAND[system_+arch].format(
-            filename, cdm_path, drmconfig.WIDEVINECDM_DICT[system_])
+            quote(filename),
+            quote(cdm_path),
+            drmconfig.WIDEVINECDM_DICT[system_])
         os.system(command)
     dp.close()
     xbmcgui.Dialog().ok('Success', '{0} successfully installed at {1}'.format(
