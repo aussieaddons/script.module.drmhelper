@@ -64,7 +64,11 @@ def get_kodi_version():
 
 
 def get_kodi_name():
+    """
+    Returns Kodi codename
+    """
     return drmconfig.KODI_NAME[get_kodi_version()[:2]]
+
 
 def get_kodi_build():
     """
@@ -75,17 +79,28 @@ def get_kodi_build():
     commit = git_string[git_string.find('-')+1:]
     return date, commit
 
+
 def get_latest_ia_ver():
+    """
+    Return dict containing info for latest compiled inputstream.adaptive
+    addon in the binary repo
+    """
     kodi = get_kodi_name()
     return drmconfig.CURRENT_IA_VERSION[kodi]
 
+
 def is_ia_current(addon, latest=False):
+    """
+    Check if inputstream.adaptive addon meets the minimum version requirements.
+    latest -- checks if addon is equal to the latest available compiled version
+    """
     ia_ver = addon.getAddonInfo('version')
     if latest:
         ver = get_latest_ia_ver()['ver']
     else:
         ver = drmconfig.MIN_IA_VERSION[get_kodi_name()]
     return LooseVersion(ia_ver) >= LooseVersion(ver)
+
 
 def get_addon(drm=True):
     """
@@ -167,7 +182,7 @@ def check_inputstream(drm=True):
     Main function call to check all components required are available for
     DRM playback before setting the resolved URL in Kodi.
     drm -- set to false if you just want to check for inputstream.adaptive
-        and not widevine components eg. HLS playback 
+        and not widevine components eg. HLS playback
     """
     try:
         ver = get_kodi_version()
@@ -179,7 +194,7 @@ def check_inputstream(drm=True):
             return False
     except ValueError:  # custom builds of Kodi may not follow same convention
         pass
-    
+
     date, commit = get_kodi_build()
     min_date, min_commit = drmconfig.MIN_LEIA_BUILD
     if int(date) < int(min_date) and float(get_kodi_version()) >= 18.0:
@@ -213,7 +228,7 @@ def check_inputstream(drm=True):
         return True
 
     # only checking for installation of inputstream.adaptive (eg HLS playback)
-    if drm == False:
+    if not drm:
         return True
 
     # only 32bit userspace supported for linux aarch64 - no 64bit widevinecdm
@@ -344,14 +359,14 @@ def get_ssd_wv(cdm_path=None):
         download_path = os.path.join(cdm_path, ssd_filename)
     if os.path.isfile(download_path):
         os.remove(download_path)
-    
+
     try:
         kodi = drmconfig.KODI_NAME[get_kodi_version()[:2]]
     # custom builds (SPMC etc.) might have something else here, let's assume
     # Krypton for now
     except KeyError:
         kodi = 'Krypton'
-    commit=drmconfig.CURRENT_IA_VERSION[kodi]['commit']
+    commit = drmconfig.CURRENT_IA_VERSION[kodi]['commit']
     ssdfn, ssdext = ssd_filename.split('.')[0], ssd_filename.split('.')[1]
     url = '{base}{kodi}/{plat}-{ssdfn}-{commit}.{ssdext}'.format(
         base=drmconfig.REPO_BASE,
@@ -360,17 +375,17 @@ def get_ssd_wv(cdm_path=None):
         ssdfn=ssdfn,
         commit=commit,
         ssdext=ssdext)
-    
+
     if not progress_download(url, download_path, ssd_filename):
         return
     os.chmod(download_path, 0755)
     xbmcgui.Dialog().ok(
         'Success', ('{fn} version {commit} for Kodi {kodi} '
-        'successfully installed at {path}'.format(
-            fn=ssd_filename,
-            commit=commit,
-            kodi=kodi,
-            path=download_path)))
+                    'successfully installed at {path}'.format(
+                        fn=ssd_filename,
+                        commit=commit,
+                        kodi=kodi,
+                        path=download_path)))
 
 
 def progress_download(url, download_path, display_filename=None):
@@ -434,7 +449,7 @@ def get_ia_direct(update=False, drm=True):
         plat=plat.lower(),
         ver=ver,
         commit=commit)
-    
+
     filename = url.split('/')[-1]
     location = os.path.join(xbmc.translatePath('special://home'), filename)
     xbmc.log(location, level=xbmc.LOGDEBUG)
@@ -464,10 +479,10 @@ def get_ia_direct(update=False, drm=True):
             xbmcgui.Dialog().ok(
                 'Installation complete',
                 ('inputstream.adaptive version {ver} commit '
-                '{commit} for Kodi {kodi} installed.'.format(
-                    ver=ver,
-                    commit=commit,
-                    kodi=kodi)))
+                 '{commit} for Kodi {kodi} installed.'.format(
+                     ver=ver,
+                     commit=commit,
+                     kodi=kodi)))
         except Exception as e:
             xbmcgui.Dialog().ok('Unzipping failed',
                                 'Unzipping failed error {0}'.format(e))
@@ -478,5 +493,5 @@ def get_ia_direct(update=False, drm=True):
                 ('Would you like to update the corresponding '
                  'ssd_wv module? (recommended if updating '
                  ' inputstream.adaptive)')):
-                 get_ssd_wv()
+                get_ssd_wv()
         return True
