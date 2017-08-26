@@ -29,14 +29,24 @@ from pipes import quote
 from distutils.version import LooseVersion
 
 system_ = platform.system()
-arch = platform.machine()
-if arch[:3] == 'arm':
-    arch = arch[:5]
+
+if xbmc.getCondVisibility('system.platform.android'):
+    system_ = 'Android'
+
+try:
+    machine = platform.machine()
+    if machine[:3] == 'arm':
+        machine = machine[:5]
+    arch = drmconfig.ARCH_DICT.get(machine, 'NS')
+except:
+    arch = 'NS'
 
 if system_ == 'Windows':
     arch = drmconfig.WINDOWS_BITNESS[platform.architecture()[0]]
 
-if system_+arch in drmconfig.SUPPORTED_PLATFORMS:
+plat = '{0}-{1}'.format(system_, arch)
+
+if plat in drmconfig.SUPPORTED_PLATFORMS:
     supported = True
     ssd_filename = drmconfig.SSD_WV_DICT[system_]
     widevinecdm_filename = drmconfig.WIDEVINECDM_DICT[system_]
@@ -53,22 +63,37 @@ def get_kodi_version():
     return ver
 
 
-def get_kodi_date():
+def get_kodi_name():
+    return drmconfig.KODI_NAME[get_kodi_version()[:2]]
+
+def get_kodi_build():
     """
-    Return Kodi git date from build
+    Return Kodi git date and commit from build as a tuple
     """
     git_string = xbmc.getInfoLabel("System.BuildVersion").split(' ')[1]
     date = git_string[git_string.find(':')+1:git_string.find('-')]
-    return date
+    commit = git_string[git_string.find('-')+1:]
+    return date, commit
 
+def get_latest_ia_ver():
+    kodi = get_kodi_name()
+    return drmconfig.CURRENT_IA_VERSION[kodi]
 
-def get_addon():
+def is_ia_current(addon, latest=False):
+    ia_ver = addon.getAddonInfo('version')
+    if latest:
+        ver = get_latest_ia_ver()['ver']
+    else:
+        ver = drmconfig.MIN_IA_VERSION[get_kodi_name()]
+    return LooseVersion(ia_ver) >= LooseVersion(ver)
+
+def get_addon(drm=True):
     """
     Check if inputstream.adaptive is installed, attempt to install if not.
     Enable inpustream.adaptive addon.
     """
     def manual_install(update=False):
-        if get_ia_direct(update):
+        if get_ia_direct(update, drm):
             try:
                 addon = xbmcaddon.Addon('inputstream.adaptive')
                 return addon
@@ -111,9 +136,7 @@ def get_addon():
                 return False
         addon = xbmcaddon.Addon('inputstream.adaptive')
 
-    ia_ver = addon.getAddonInfo('version')
-    if LooseVersion(ia_ver) < LooseVersion(
-        drmconfig.MIN_IA_VERSION[get_kodi_version()[:2]]):
+    if not is_ia_current(addon):
         if xbmcgui.Dialog().yesno('inputstream.adaptive version lower than '
                                   'required', 'inputstream.adaptive version '
                                   'does not meet requirements. Would '
@@ -126,14 +149,9 @@ def get_addon():
 
 def is_supported():
     """
-    Returns true if we're on a platform that has a cdm module and
-    can interface with the decrypter module.
-    i.e not armv6 (RPi1)
+    Reads the value of 'supported' global variable and displays a helpful
+    message to the user if on an unsupported platform.
     """
-    # Android now supported
-    if xbmc.getCondVisibility('system.platform.android'):
-        return True
-
     if not supported:
         xbmcgui.Dialog().ok('OS/Arch not supported',
                             '{0} {1} not supported for DRM playblack'.format(
@@ -144,14 +162,16 @@ def is_supported():
     return True
 
 
-def check_inputstream():
+def check_inputstream(drm=True):
     """
     Main function call to check all components required are available for
     DRM playback before setting the resolved URL in Kodi.
+    drm -- set to false if you just want to check for inputstream.adaptive
+        and not widevine components eg. HLS playback 
     """
     try:
         ver = get_kodi_version()
-        if ver < 17.0:
+        if float(ver) < 17.0:
             xbmcgui.Dialog().ok('Kodi 17+ Required',
                                 ('The minimum version of Kodi required for DRM'
                                  'protected content is 17.0 - please upgrade '
@@ -159,6 +179,19 @@ def check_inputstream():
             return False
     except ValueError:  # custom builds of Kodi may not follow same convention
         pass
+    
+    date, commit = get_kodi_build()
+    min_date, min_commit = drmconfig.MIN_LEIA_BUILD
+    if int(date) < int(min_date) and float(get_kodi_version()) >= 18.0:
+        xbmcgui.Dialog().ok('Kodi 18 build is outdated',
+                            ('The minimum Kodi 18 build required for DRM '
+                             'support is dated {0} with commit hash {1}. '
+                             'Your installation is dated {2} with commit '
+                             'hash {3}. '
+                             'Please update your Kodi installation '
+                             'and try again.'.format(
+                                min_date, min_commit, date, commit)))
+        return False
 
     if not is_supported():
         return False
@@ -171,8 +204,28 @@ def check_inputstream():
                              'is required to view DRM protected content.'))
         return False
 
+    # widevine built into android
     if xbmc.getCondVisibility('system.platform.android'):
         return True
+
+    # ??? not sure if ios has widevine support, assuming so for now ???
+    if xbmc.getCondVisibility('system.platform.ios'):
+        return True
+
+    # only checking for installation of inputstream.adaptive (eg HLS playback)
+    if drm == False:
+        return True
+
+    # only 32bit userspace supported for linux aarch64 - no 64bit widevinecdm
+    if plat == 'Linux-aarch64':
+        if platform.architecture()[0] == '64bit':
+            xbmcgui.Dialog().ok('64 bit build for aarch64 not supported',
+                                ('A build of your OS that supports 32 bit '
+                                 'userspace binaries is required for DRM '
+                                 'playback. Special builds of LibreELEC '
+                                 'for your platform may be available from '
+                                 'the LibreELEC forums user Raybuntu '
+                                 'for this.'))
 
     cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
 
@@ -204,7 +257,7 @@ def check_inputstream():
 
 def unzip_cdm(zpath, cdm_path):
     """
-    extract windows 32bit widevinecdm.dll from downloaded zip
+    extract windows widevinecdm.dll from downloaded zip
     """
     with zipfile.ZipFile(zpath) as zf:
         with open(posixpath.join(cdm_path, widevinecdm_filename), 'wb') as f:
@@ -233,7 +286,7 @@ def get_widevinecdm(cdm_path=None):
                             'This module is not required for Android')
         return
 
-    url = drmconfig.WIDEVINECDM_URL[system_+arch]
+    url = drmconfig.WIDEVINECDM_URL[plat]
     filename = url.split('/')[-1]
 
     if not os.path.isdir(cdm_path):
@@ -253,7 +306,7 @@ def get_widevinecdm(cdm_path=None):
     if system_ == 'Windows':
         unzip_cdm(download_path, cdm_path)
     else:
-        command = drmconfig.UNARCHIVE_COMMAND[system_+arch].format(
+        command = drmconfig.UNARCHIVE_COMMAND[plat].format(
             quote(filename),
             quote(cdm_path),
             drmconfig.WIDEVINECDM_DICT[system_])
@@ -284,18 +337,40 @@ def get_ssd_wv(cdm_path=None):
     if not os.path.isdir(cdm_path):
         os.makedirs(cdm_path)
     ssd = os.path.join(cdm_path, ssd_filename)
+    # preserve link for addons/inputstream.adaptive/lib
     if os.path.islink(ssd):
         download_path = os.path.realpath(ssd)
     else:
         download_path = os.path.join(cdm_path, ssd_filename)
     if os.path.isfile(download_path):
         os.remove(download_path)
-    url = posixpath.join(drmconfig.SSD_WV_REPO, system_, arch, ssd_filename)
+    
+    try:
+        kodi = drmconfig.KODI_NAME[get_kodi_version()[:2]]
+    # custom builds (SPMC etc.) might have something else here, let's assume
+    # Krypton for now
+    except KeyError:
+        kodi = 'Krypton'
+    commit=drmconfig.CURRENT_IA_VERSION[kodi]['commit']
+    ssdfn, ssdext = ssd_filename.split('.')[0], ssd_filename.split('.')[1]
+    url = '{base}{kodi}/{plat}-{ssdfn}-{commit}.{ssdext}'.format(
+        base=drmconfig.REPO_BASE,
+        kodi=kodi,
+        plat=plat.lower(),
+        ssdfn=ssdfn,
+        commit=commit,
+        ssdext=ssdext)
+    
     if not progress_download(url, download_path, ssd_filename):
         return
     os.chmod(download_path, 0755)
-    xbmcgui.Dialog().ok('Success', '{0} successfully installed at {1}'.format(
-        ssd_filename, download_path))
+    xbmcgui.Dialog().ok(
+        'Success', ('{fn} version {commit} for Kodi {kodi} '
+        'successfully installed at {path}'.format(
+            fn=ssd_filename,
+            commit=commit,
+            kodi=kodi,
+            path=download_path)))
 
 
 def progress_download(url, download_path, display_filename=None):
@@ -337,15 +412,29 @@ def progress_download(url, download_path, display_filename=None):
     return True
 
 
-def get_ia_direct(update=False):
+def get_ia_direct(update=False, drm=True):
     """
     Download inputstream.adaptive zip file from remote repository and save in
     Kodi's 'home' folder, unzip to addons folder.
     """
     if not is_supported():
         return False
+    try:
+        kodi = drmconfig.KODI_NAME[get_kodi_version()[:2]]
+    # custom builds (SPMC etc.) might have something else here, let's assume
+    # Krypton for now
+    except KeyError:
+        kodi = 'Krypton'
+    ver = drmconfig.CURRENT_IA_VERSION[kodi]['ver']
+    commit = drmconfig.CURRENT_IA_VERSION[kodi]['commit']
 
-    url = drmconfig.ADAPTIVE_URL[system_+arch]
+    url = '{base}{kodi}/{plat}-inputstream.adaptive-{ver}-{commit}.zip'.format(
+        base=drmconfig.REPO_BASE,
+        kodi=kodi,
+        plat=plat.lower(),
+        ver=ver,
+        commit=commit)
+    
     filename = url.split('/')[-1]
     location = os.path.join(xbmc.translatePath('special://home'), filename)
     xbmc.log(location, level=xbmc.LOGDEBUG)
@@ -356,12 +445,15 @@ def get_ia_direct(update=False):
     else:
         try:
             with zipfile.ZipFile(location, "r") as z:
-                ia_path = os.path.join(xbmc.translatePath('special://home'),
-                                       'addons')
+                addons_path = os.path.join(
+                    xbmc.translatePath('special://home'), 'addons')
                 if update:
-                    shutil.rmtree(
-                        os.path.join(ia_path, 'inputstream.adaptive'))
-                z.extractall(ia_path)
+                    ia_path = os.path.join(addons_path, 'inputstream.adaptive')
+                    if os.path.isdir(ia_path):
+                        shutil.rmtree(ia_path)
+                    os.mkdir(ia_path)
+
+                z.extractall(addons_path)
             xbmc.executebuiltin('UpdateLocalAddons', True)
             #  enable addon, seems to default to disabled
             json_string = ('{"jsonrpc":"2.0","id":1,"method":'
@@ -369,10 +461,22 @@ def get_ia_direct(update=False):
                            '{"addonid":"inputstream.adaptive",'
                            '"enabled":true}}')
             xbmc.executeJSONRPC(json_string)
-            xbmcgui.Dialog().ok('Installation complete',
-                                'inputstream.adaptive installed.')
+            xbmcgui.Dialog().ok(
+                'Installation complete',
+                ('inputstream.adaptive version {ver} commit '
+                '{commit} for Kodi {kodi} installed.'.format(
+                    ver=ver,
+                    commit=commit,
+                    kodi=kodi)))
         except Exception as e:
             xbmcgui.Dialog().ok('Unzipping failed',
                                 'Unzipping failed error {0}'.format(e))
         os.remove(location)
+        if drm:
+            if xbmcgui.Dialog().yesno(
+                'Download ssd_wv module?',
+                ('Would you like to update the corresponding '
+                 'ssd_wv module? (recommended if updating '
+                 ' inputstream.adaptive)')):
+                 get_ssd_wv()
         return True
