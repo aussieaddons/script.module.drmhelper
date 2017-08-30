@@ -48,8 +48,9 @@ plat = '{0}-{1}'.format(system_, arch)
 
 if plat in drmconfig.SUPPORTED_PLATFORMS:
     supported = True
-    ssd_filename = drmconfig.SSD_WV_DICT[system_]
-    widevinecdm_filename = drmconfig.WIDEVINECDM_DICT[system_]
+    if system_ != 'Android':
+        ssd_filename = drmconfig.SSD_WV_DICT[system_]
+        widevinecdm_filename = drmconfig.WIDEVINECDM_DICT[system_]
 else:
     supported = False
 
