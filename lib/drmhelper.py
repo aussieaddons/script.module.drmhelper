@@ -15,6 +15,7 @@
 # along with 9now.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import re
 import posixpath
 import xbmc
 import xbmcgui
@@ -73,12 +74,14 @@ def get_kodi_name():
 
 def get_kodi_build():
     """
-    Return Kodi git date and commit from build as a tuple
+    Return Kodi build date
     """
-    git_string = xbmc.getInfoLabel("System.BuildVersion").split(' ')[1]
-    date = git_string[git_string.find(':')+1:git_string.find('-')]
-    commit = git_string[git_string.find('-')+1:]
-    return date, commit
+    build_string = xbmc.getInfoLabel("System.BuildVersion").split(' ')[1]
+    m = re.search('\d{8}', build_string)
+    if m:
+        return m.group(0)
+    else:
+        return m
 
 
 def get_latest_ia_ver():
@@ -196,17 +199,22 @@ def check_inputstream(drm=True):
     except ValueError:  # custom builds of Kodi may not follow same convention
         pass
 
-    date, commit = get_kodi_build()
+    date = get_kodi_build()
+    if not date:  # can't find build date, assume meets minimum
+        xbmc.log('[DRMHELPER] Could not determine date of build, '
+                 'build string is {0}'
+                 ''.format(xbmc.getInfoLabel("System.BuildVersion")),
+                 xbmc.LOGNOTICE)
+        return True
     min_date, min_commit = drmconfig.MIN_LEIA_BUILD
     if int(date) < int(min_date) and float(get_kodi_version()) >= 18.0:
         xbmcgui.Dialog().ok('Kodi 18 build is outdated',
                             ('The minimum Kodi 18 build required for DRM '
                              'support is dated {0} with commit hash {1}. '
-                             'Your installation is dated {2} with commit '
-                             'hash {3}. '
+                             'Your installation is dated {2}.'
                              'Please update your Kodi installation '
                              'and try again.'.format(
-                                min_date, min_commit, date, commit)))
+                                min_date, min_commit, date)))
         return False
 
     if not is_supported():
