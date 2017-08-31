@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><addon id="script.module.drmhelper" name="DRM Helper" provider-name="Aussie Add-ons" version="1.0.5">
+<?xml version="1.0" ?><addon id="script.module.drmhelper" name="DRM Helper" provider-name="Aussie Add-ons" version="1.0.6">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>
   </requires>
