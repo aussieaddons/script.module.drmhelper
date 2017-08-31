@@ -40,7 +40,7 @@ SUPPORTED_PLATFORMS = ['Windows-x86_64',
                        'Linux-x86_64',
                        'Linux-arm',
                        'Linux-aarch64',
-                       'Android-x86_64',
+                       'Android-x86',
                        'Android-arm',
                        'Android-aarch64']
                        
