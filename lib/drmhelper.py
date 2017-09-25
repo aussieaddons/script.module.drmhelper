@@ -76,7 +76,10 @@ def get_kodi_build():
     """
     Return Kodi build date
     """
-    build_string = xbmc.getInfoLabel("System.BuildVersion").split(' ')[1]
+    try:
+        build_string = xbmc.getInfoLabel("System.BuildVersion").split(' ')[1]
+    except IndexError:
+        return None
     m = re.search('\d{8}', build_string)
     if m:
         return m.group(0)
