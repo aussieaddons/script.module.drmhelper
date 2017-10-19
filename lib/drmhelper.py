@@ -56,6 +56,14 @@ else:
     supported = False
 
 
+def log(message):
+    """
+    Log message to kodi.log
+    """
+    ver = xbmcaddon.Addon('script.module.drmhelper').getAddonInfo('version')
+    xbmc.log('[DRMHELPER {0}] - {1}'.format(ver, message), xbmc.LOGNOTICE)
+
+
 def get_kodi_version():
     """
     Return plain version number as string
@@ -120,7 +128,7 @@ def get_addon(drm=True):
                 addon = xbmcaddon.Addon('inputstream.adaptive')
                 return addon
             except RuntimeError:
-                return False
+                return None
 
     addon = None
     try:
@@ -134,9 +142,11 @@ def get_addon(drm=True):
         return False
 
     if 'error' in result:  # not installed
+        log('inputstream.adaptive not currently installed')
         try:  # see if there's an installed repo that has it
             xbmc.executebuiltin('InstallAddon(inputstream.adaptive)', True)
             addon = xbmcaddon.Addon('inputstream.adaptive')
+            log('inputstream.adaptive installed from repo')
         except RuntimeError:
             if xbmcgui.Dialog().yesno('inputstream.adaptive not in repo',
                                       'inputstream.adaptive not found in '
@@ -145,9 +155,13 @@ def get_addon(drm=True):
                                       'your system from a direct link '
                                       'and install?'):
                 addon = manual_install()
+            if not addon:
+                log('Manual install failed/user selected no')
+                return False
 
     else:  # installed but not enabled. let's enable it.
         if result['result']['addon'].get('enabled') is False:
+            log('inputstream.adaptive not enabled, enabling...')
             json_string = ('{"jsonrpc":"2.0","id":1,"method":'
                            '"Addons.SetAddonEnabled","params":'
                            '{"addonid":"inputstream.adaptive",'
@@ -155,6 +169,7 @@ def get_addon(drm=True):
             try:
                 xbmc.executeJSONRPC(json_string)
             except RuntimeError:
+                log('Failure in enabling inputstream.adaptive')
                 return False
         addon = xbmcaddon.Addon('inputstream.adaptive')
 
@@ -166,6 +181,9 @@ def get_addon(drm=True):
                                   'the required version from a direct link '
                                   'and reinstall?'):
             addon = manual_install(update=True)
+        else:
+            log('inputstream.adaptive version lower than required, aborting..')
+            return False
     return addon
 
 
@@ -178,8 +196,8 @@ def is_supported():
         xbmcgui.Dialog().ok('OS/Arch not supported',
                             '{0} {1} not supported for DRM playblack'.format(
                                 system_, arch))
-        xbmc.log('{0} {1} not supported for DRM playback'.format(
-            system_, arch), xbmc.LOGNOTICE)
+        log('{0} {1} not supported for DRM playback'.format(
+            system_, arch))
         return False
     return True
 
@@ -193,6 +211,7 @@ def check_inputstream(drm=True):
     """
     try:
         ver = get_kodi_version()
+        log('Kodi version: {0}'.format(ver))
         if float(ver) < 17.0:
             xbmcgui.Dialog().ok('Kodi 17+ Required',
                                 ('The minimum version of Kodi required for DRM'
@@ -204,11 +223,15 @@ def check_inputstream(drm=True):
 
     date = get_kodi_build()
     if not date:  # can't find build date, assume meets minimum
-        xbmc.log('[DRMHELPER] Could not determine date of build, '
-                 'build string is {0}'
-                 ''.format(xbmc.getInfoLabel("System.BuildVersion")),
-                 xbmc.LOGNOTICE)
-        return True
+        log('Could not determine date of build, '
+            'build string is {0}'
+            ''.format(xbmc.getInfoLabel("System.BuildVersion")))
+        date = drmconfig.MIN_LEIA_BUILD[0]
+
+    log('Build date: {0}'.format(date))
+    log('System: {0}'.format(system_))
+    log('Arch: {0}'.format(arch))
+
     min_date, min_commit = drmconfig.MIN_LEIA_BUILD
     if int(date) < int(min_date) and float(get_kodi_version()) >= 18.0:
         xbmcgui.Dialog().ok('Kodi 18 build is outdated',
@@ -231,21 +254,34 @@ def check_inputstream(drm=True):
                              'is required to view DRM protected content.'))
         return False
 
-    # widevine built into android
+    # widevine built into android - not supported on 17 atm though
     if xbmc.getCondVisibility('system.platform.android'):
+        log('Running on Android')
+        if get_kodi_version()[:2] == '17' and drm:
+            xbmcgui.Dialog().ok('Kodi 17 on Android not supported',
+                                ('Kodi 17 is not currently supported for '
+                                 'Android with encrypted content. Nightly '
+                                 'builds of Kodi 18 are available to download '
+                                 'from http://mirrors.kodi.tv/nightlies/androi'
+                                 'd/arm/master/'))
+            log('Kodi 17 Android DRM - not supported')
+            return False
         return True
 
     # ??? not sure if ios has widevine support, assuming so for now ???
     if xbmc.getCondVisibility('system.platform.ios'):
+        log('Running on iOS')
         return True
 
     # only checking for installation of inputstream.adaptive (eg HLS playback)
     if not drm:
+        log('DRM checking not requested')
         return True
 
     # only 32bit userspace supported for linux aarch64 - no 64bit widevinecdm
     if plat == 'Linux-aarch64':
         if platform.architecture()[0] == '64bit':
+            log('Running on Linux aarch64 64bit userspace - not supported')
             xbmcgui.Dialog().ok('64 bit build for aarch64 not supported',
                                 ('A build of your OS that supports 32 bit '
                                  'userspace binaries is required for DRM '
@@ -257,6 +293,7 @@ def check_inputstream(drm=True):
     cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
 
     if not os.path.isfile(os.path.join(cdm_path, widevinecdm_filename)):
+        log('Widevine CDM missing')
         msg1 = 'Missing widevinecdm module required for DRM content'
         msg2 = '{0} not found in {1}'.format(
             drmconfig.WIDEVINECDM_DICT[system_],
@@ -269,6 +306,7 @@ def check_inputstream(drm=True):
             return False
 
     if not os.path.isfile(os.path.join(cdm_path, ssd_filename)):
+        log('SSD module not found')
         msg1 = 'Missing ssd_wv module required for DRM content'
         msg2 = '{0} not found in {1}'.format(
             drmconfig.SSD_WV_DICT[system_],
@@ -286,8 +324,10 @@ def unzip_cdm(zpath, cdm_path):
     """
     extract windows widevinecdm.dll from downloaded zip
     """
+    cdm_fn = posixpath.join(cdm_path, widevinecdm_filename)
+    log('unzipping widevinecdm.dll from {0} to {1}'.format(zpath, cdm_fn))
     with zipfile.ZipFile(zpath) as zf:
-        with open(posixpath.join(cdm_path, widevinecdm_filename), 'wb') as f:
+        with open(cdm_fn, 'wb') as f:
             data = zf.read('widevinecdm.dll')
             f.write(data)
     os.remove(zpath)
@@ -309,18 +349,21 @@ def get_widevinecdm(cdm_path=None):
         cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
 
     if xbmc.getCondVisibility('system.platform.android'):
+        log('Widevinecdm update - not possible on Android')
         xbmcgui.Dialog().ok('Not required for Android',
-                            'This module is not required for Android')
+                            'This module cannot be updated on Android')
         return
 
     url = drmconfig.WIDEVINECDM_URL[plat]
     filename = url.split('/')[-1]
 
     if not os.path.isdir(cdm_path):
+        log('Creating directory: {0}'.format(cdm_path))
         os.makedirs(cdm_path)
-    if os.path.isfile(os.path.join(cdm_path, widevinecdm_filename)):
-        os.remove(os.path.join(cdm_path, widevinecdm_filename))
-
+    cdm_fn = os.path.join(cdm_path, widevinecdm_filename)
+    if os.path.isfile(cdm_fn):
+        log('Removing existing widevine_cdm: {0}'.format(cdm_fn))
+        os.remove(cdm_fn)
     download_path = os.path.join(cdm_path, filename)
     if not progress_download(url, download_path, widevinecdm_filename):
         return
@@ -337,6 +380,7 @@ def get_widevinecdm(cdm_path=None):
             quote(filename),
             quote(cdm_path),
             drmconfig.WIDEVINECDM_DICT[system_])
+        log('executing command: {0}'.format(command))
         os.system(command)
     dp.close()
     xbmcgui.Dialog().ok('Success', '{0} successfully installed at {1}'.format(
@@ -357,11 +401,13 @@ def get_ssd_wv(cdm_path=None):
         cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
 
     if xbmc.getCondVisibility('system.platform.android'):
+        log('Ssd_wv update - not possible on Android')
         xbmcgui.Dialog().ok('Not required for Android',
-                            'This module is not required for Android')
+                            'This module cannot be updated on Android')
         return
 
     if not os.path.isdir(cdm_path):
+        log('Creating directory: {0}'.format(cdm_path))
         os.makedirs(cdm_path)
     ssd = os.path.join(cdm_path, ssd_filename)
     # preserve link for addons/inputstream.adaptive/lib
@@ -370,6 +416,7 @@ def get_ssd_wv(cdm_path=None):
     else:
         download_path = os.path.join(cdm_path, ssd_filename)
     if os.path.isfile(download_path):
+        log('Removing existing ssd_wv: {0}'.format(download_path))
         os.remove(download_path)
 
     try:
@@ -404,14 +451,14 @@ def progress_download(url, download_path, display_filename=None):
     """
     Download file in Kodi with progress bar
     """
-    xbmc.log('Downloading {0}'.format(url), xbmc.LOGNOTICE)
+    log('Downloading {0}'.format(url))
     try:
         res = requests.get(url, stream=True, verify=False)
         res.raise_for_status()
     except requests.exceptions.HTTPError:
         xbmcgui.Dialog().ok('Download failed',
                             'HTTP ' + str(res.status_code) + ' error')
-        xbmc.log('Error retrieving {0}'.format(url), level=xbmc.LOGNOTICE)
+        log('Error retrieving {0}'.format(url))
 
         return False
 
@@ -433,8 +480,8 @@ def progress_download(url, download_path, display_filename=None):
                 dp.close()
                 res.close()
             dp.update(percent)
-    xbmc.log('Download {0} bytes complete, saved in {1}'.format(
-        int(total_length), download_path), xbmc.LOGNOTICE)
+    log('Download {0} bytes complete, saved in {1}'.format(
+        int(total_length), download_path))
     dp.close()
     return True
 
@@ -455,6 +502,9 @@ def get_ia_direct(update=False, drm=True):
     ver = drmconfig.CURRENT_IA_VERSION[kodi]['ver']
     commit = drmconfig.CURRENT_IA_VERSION[kodi]['commit']
 
+    log('Attempting manual install of inputstream.adaptive (update={0}, '
+        'drm={1}, kodi={2})'.format(str(update), str(drm), kodi))
+
     url = '{base}{kodi}/{plat}-inputstream.adaptive-{ver}-{commit}.zip'.format(
         base=drmconfig.REPO_BASE,
         kodi=kodi,
@@ -464,7 +514,6 @@ def get_ia_direct(update=False, drm=True):
 
     filename = url.split('/')[-1]
     location = os.path.join(xbmc.translatePath('special://home'), filename)
-    xbmc.log(location, level=xbmc.LOGDEBUG)
     if not progress_download(url, location, filename):
         xbmcgui.Dialog().ok('Download Failed', 'Failed to download {0} from '
                             '{1}'.format(filename, url))
