@@ -413,6 +413,10 @@ def get_ssd_wv(cdm_path=None):
     # preserve link for addons/inputstream.adaptive/lib
     if os.path.islink(ssd):
         download_path = os.path.realpath(ssd)
+        download_dir = os.path.dirname(download_path)
+        if not os.path.isdir(download_dir):
+            log('Creating directory: {0}'.format(download_dir))
+            os.makedirs(download_dir)
     else:
         download_path = os.path.join(cdm_path, ssd_filename)
     if os.path.isfile(download_path):
