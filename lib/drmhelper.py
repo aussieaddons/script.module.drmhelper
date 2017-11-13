@@ -223,8 +223,8 @@ def check_inputstream(drm=True):
 
     date = get_kodi_build()
     if not date:  # can't find build date, assume meets minimum
-        log('Could not determine date of build, '
-            'build string is {0}'
+        log('Could not determine date of build, assuming date meets minimum. '
+            'Build string is {0}'
             ''.format(xbmc.getInfoLabel("System.BuildVersion")))
         date = drmconfig.MIN_LEIA_BUILD[0]
 
