@@ -214,9 +214,9 @@ def check_inputstream(drm=True):
         log('Kodi version: {0}'.format(ver))
         if float(ver) < 17.0:
             xbmcgui.Dialog().ok('Kodi 17+ Required',
-                                ('The minimum version of Kodi required for DRM'
-                                 'protected content is 17.0 - please upgrade '
-                                 'in order to use this feature.'))
+                                ('The minimum version of Kodi required for '
+                                 'DASH/DRM protected content is 17.0 - please '
+                                 'upgrade in order to use this feature.'))
             return False
     except ValueError:  # custom builds of Kodi may not follow same convention
         pass
@@ -235,7 +235,7 @@ def check_inputstream(drm=True):
     min_date, min_commit = drmconfig.MIN_LEIA_BUILD
     if int(date) < int(min_date) and float(get_kodi_version()) >= 18.0:
         xbmcgui.Dialog().ok('Kodi 18 build is outdated',
-                            ('The minimum Kodi 18 build required for DRM '
+                            ('The minimum Kodi 18 build required for DASH/DRM '
                              'support is dated {0} with commit hash {1}. '
                              'Your installation is dated {2}.'
                              'Please update your Kodi installation '
@@ -243,7 +243,7 @@ def check_inputstream(drm=True):
                                 min_date, min_commit, date)))
         return False
 
-    if not is_supported():
+    if not is_supported() and drm == True:
         return False
 
     addon = get_addon()
