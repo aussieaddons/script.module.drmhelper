@@ -53,7 +53,7 @@ KODI_NAME = {'17': 'Krypton', '18': 'Leia'}
 
 MIN_IA_VERSION = {'Krypton': '2.0.7', 'Leia': '2.0.10'}
 
-CURRENT_IA_VERSION = {'Krypton': {'ver': '2.0.10', 'commit': '161f319'},
+CURRENT_IA_VERSION = {'Krypton': {'ver': '2.0.19', 'commit': '9af2121'},
                       'Leia': {'ver': '2.0.10', 'commit': '0c7e975'}}
 
 MIN_LEIA_BUILD = ('20170818', 'e6b0c83')
