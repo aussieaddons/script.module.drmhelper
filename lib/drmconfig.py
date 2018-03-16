@@ -47,7 +47,7 @@ SUPPORTED_PLATFORMS = ['Windows-x86_64',
 WINDOWS_BITNESS = {'32bit': 'x86',
                    '64bit': 'x86_64'}
 
-REPO_BASE = 'https://github.com/xbmc-catchuptv-au/repo-binary/raw/master/'
+REPO_BASE = 'https://github.com/aussieaddons/repo-binary/raw/master/'
 
 KODI_NAME = {'17': 'Krypton', '18': 'Leia'}
 
