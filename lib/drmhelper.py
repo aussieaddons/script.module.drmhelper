@@ -31,6 +31,12 @@ from distutils.version import LooseVersion
 
 system_ = platform.system()
 
+# dummy request first for this infolabel, sometimes returns 'Busy'
+xbmc.getInfoLabel('System.OSVersionInfo')
+xbmc.sleep(100)
+running_on = xbmc.getInfoLabel('System.OSVersionInfo').split(' ')[0]
+libreelec = running_on == 'LibreELEC'
+
 if xbmc.getCondVisibility('system.platform.android'):
     system_ = 'Android'
 
@@ -109,6 +115,8 @@ def is_ia_current(addon, latest=False):
     Check if inputstream.adaptive addon meets the minimum version requirements.
     latest -- checks if addon is equal to the latest available compiled version
     """
+    if not addon:
+        return False
     ia_ver = addon.getAddonInfo('version')
     if latest:
         ver = get_latest_ia_ver()['ver']
@@ -243,7 +251,7 @@ def check_inputstream(drm=True):
                                 min_date, min_commit, date)))
         return False
 
-    if not is_supported() and drm == True:
+    if not is_supported() and drm:
         return False
 
     addon = get_addon()
@@ -401,9 +409,19 @@ def get_ssd_wv(cdm_path=None):
         cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
 
     if xbmc.getCondVisibility('system.platform.android'):
-        log('Ssd_wv update - not possible on Android')
+        log('ssd_wv update - not possible on Android')
         xbmcgui.Dialog().ok('Not required for Android',
                             'This module cannot be updated on Android')
+        return
+
+    if system_ == 'Linux' and not libreelec:
+        log('ssd_wv update - not possible on linux other than LibreELEC')
+        xbmcgui.Dialog().ok('Not Available for this OS',
+                            'This method is not available for installation '
+                            'on Linux distributions other than LibreELEC. '
+                            'Try installing kodi-inputstream-adaptive '
+                            'package from your terminal (eg Ubuntu. sudo apt '
+                            'install kodi-inputstream-adaptive).')
         return
 
     if not os.path.isdir(cdm_path):
@@ -497,6 +515,17 @@ def get_ia_direct(update=False, drm=True):
     """
     if not is_supported():
         return False
+
+    if system_ == 'Linux' and not libreelec:
+        log('inputstream.adaptive update not possible on this Linux distro')
+        xbmcgui.Dialog().ok('Not Available for this OS',
+                            'This method is not available for installation '
+                            'on Linux distributions other than LibreELEC. '
+                            'Try installing/updating kodi-inputstream-adaptive'
+                            ' package from your terminal (eg Ubuntu: sudo apt '
+                            'install kodi-inputstream-adaptive).')
+        return False
+
     try:
         kodi = drmconfig.KODI_NAME[get_kodi_version()[:2]]
     # custom builds (SPMC etc.) might have something else here, let's assume
