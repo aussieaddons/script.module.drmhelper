@@ -33,7 +33,10 @@ except:
     arch = 'NS'
 
 if system_ == 'Windows':
-    arch = drmconfig.WINDOWS_BITNESS[platform.architecture()[0]]
+    try:
+        arch = drmconfig.WINDOWS_BITNESS[platform.architecture()[0]]
+    except:
+        arch = 'NS'
 
 plat = '{0}-{1}'.format(system_, arch)
 
