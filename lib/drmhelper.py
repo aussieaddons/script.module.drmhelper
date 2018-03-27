@@ -18,11 +18,12 @@ system_ = platform.system()
 # dummy request first for this infolabel, sometimes returns 'Busy'
 xbmc.getInfoLabel('System.OSVersionInfo')
 xbmc.sleep(100)
-running_on = xbmc.getInfoLabel('System.OSVersionInfo').split(' ')[0]
-libreelec = running_on == 'LibreELEC'
 
 if xbmc.getCondVisibility('system.platform.android'):
     system_ = 'Android'
+
+if 'Xbox One' in get_os_version_info():
+    system_ = 'XboxOne'
 
 try:
     machine = platform.machine()
@@ -55,6 +56,16 @@ def log(message):
     """
     ver = xbmcaddon.Addon('script.module.drmhelper').getAddonInfo('version')
     xbmc.log('[DRMHELPER {0}] - {1}'.format(ver, message), xbmc.LOGNOTICE)
+
+
+def get_os_version_info():
+    return xbmc.getInfoLabel('System.OSVersionInfo')
+
+
+def is_libreelec():
+    if 'LibreELEC' in get_os_version_info():
+        return True
+    return False
 
 
 def get_kodi_version():
@@ -401,7 +412,7 @@ def get_ssd_wv(cdm_path=None):
                             'This module cannot be updated on Android')
         return
 
-    if system_ == 'Linux' and not libreelec:
+    if system_ == 'Linux' and not is_libreelec():
         log('ssd_wv update - not possible on linux other than LibreELEC')
         xbmcgui.Dialog().ok('Not Available for this OS',
                             'This method is not available for installation '
@@ -503,7 +514,7 @@ def get_ia_direct(update=False, drm=True):
     if not is_supported():
         return False
 
-    if system_ == 'Linux' and not libreelec:
+    if system_ == 'Linux' and not is_libreelec():
         log('inputstream.adaptive update not possible on this Linux distro')
         xbmcgui.Dialog().ok('Not Available for this OS',
                             'This method is not available for installation '
