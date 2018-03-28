@@ -19,11 +19,13 @@ system_ = platform.system()
 xbmc.getInfoLabel('System.OSVersionInfo')
 xbmc.sleep(100)
 
+version_info = xbmc.getInfoLabel('System.OSVersionInfo')
+
 if xbmc.getCondVisibility('system.platform.android'):
     system_ = 'Android'
 
-if 'Xbox One' in get_os_version_info():
-    system_ = 'XboxOne'
+if 'Xbox One' in version_info:
+    system_ = 'Xbox One'
 
 try:
     machine = platform.machine()
@@ -34,10 +36,7 @@ except:
     arch = 'NS'
 
 if system_ == 'Windows':
-    try:
-        arch = drmconfig.WINDOWS_BITNESS[platform.architecture()[0]]
-    except:
-        arch = 'NS'
+    arch = drmconfig.WINDOWS_BITNESS[platform.architecture()[0]]
 
 plat = '{0}-{1}'.format(system_, arch)
 
@@ -58,12 +57,8 @@ def log(message):
     xbmc.log('[DRMHELPER {0}] - {1}'.format(ver, message), xbmc.LOGNOTICE)
 
 
-def get_os_version_info():
-    return xbmc.getInfoLabel('System.OSVersionInfo')
-
-
 def is_libreelec():
-    if 'LibreELEC' in get_os_version_info():
+    if 'LibreELEC' in version_info:
         return True
     return False
 
@@ -199,8 +194,8 @@ def is_supported():
     message to the user if on an unsupported platform.
     """
     if not supported:
-        xbmcgui.Dialog().ok('OS/Arch not supported',
-                            '{0} {1} not supported for DRM playblack'.format(
+        xbmcgui.Dialog().ok('Platform not supported',
+                            '{0} {1} not supported for DRM playback'.format(
                                 system_, arch))
         log('{0} {1} not supported for DRM playback'.format(
             system_, arch))
@@ -412,7 +407,7 @@ def get_ssd_wv(cdm_path=None):
                             'This module cannot be updated on Android')
         return
 
-    if system_ == 'Linux' and not is_libreelec():
+    if system_ == 'Linux': and not is_libreelec():
         log('ssd_wv update - not possible on linux other than LibreELEC')
         xbmcgui.Dialog().ok('Not Available for this OS',
                             'This method is not available for installation '
