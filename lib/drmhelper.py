@@ -24,9 +24,6 @@ version_info = xbmc.getInfoLabel('System.OSVersionInfo')
 if xbmc.getCondVisibility('system.platform.android'):
     system_ = 'Android'
 
-if 'Xbox One' in version_info:
-    system_ = 'Xbox One'
-
 try:
     machine = platform.machine()
     if machine[:3] == 'arm':
@@ -36,7 +33,10 @@ except:
     arch = 'NS'
 
 if system_ == 'Windows':
-    arch = drmconfig.WINDOWS_BITNESS[platform.architecture()[0]]
+    try:
+        arch = drmconfig.WINDOWS_BITNESS[platform.architecture()[0]]
+    except:
+        arch = 'Xbox One'
 
 plat = '{0}-{1}'.format(system_, arch)
 
