@@ -407,7 +407,7 @@ def get_ssd_wv(cdm_path=None):
                             'This module cannot be updated on Android')
         return
 
-    if system_ == 'Linux': and not is_libreelec():
+    if system_ == 'Linux' and not is_libreelec():
         log('ssd_wv update - not possible on linux other than LibreELEC')
         xbmcgui.Dialog().ok('Not Available for this OS',
                             'This method is not available for installation '
