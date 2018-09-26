@@ -406,7 +406,9 @@ def get_widevinecdm(cdm_path=None):
             quote(cdm_path),
             drmconfig.WIDEVINECDM_DICT[system_])
         log('executing command: {0}'.format(command))
-        os.system(command)
+        output = os.popen(command).read()
+        log('command output: {0}'.format(output))
+
     dp.close()
     xbmcgui.Dialog().ok('Success', '{0} successfully installed at {1}'.format(
         widevinecdm_filename, os.path.join(cdm_path, widevinecdm_filename)))

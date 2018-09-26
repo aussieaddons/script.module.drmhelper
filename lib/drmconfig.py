@@ -3,15 +3,15 @@
 CMD_CURRENT_VERSION_URL = 'https://dl.google.com/widevine-cdm/current.txt'
 
 WIDEVINECDM_URL = {'Linux-x86_64': 'https://dl.google.com/widevine-cdm/{0}-linux-x64.zip',
-                   'Linux-arm': 'http://odroidxu.leeharris.me.uk/xu3/chromium-widevine-1.4.8.823-2-armv7h.pkg.tar.xz',
-                   'Linux-aarch64': 'http://odroidxu.leeharris.me.uk/xu3/chromium-widevine-1.4.8.823-2-armv7h.pkg.tar.xz',
+                   'Linux-arm': 'https://github.com/matthuisman/decryptmodules/raw/master/widevine/1.4.9.1088-linux-armv7.so',
+                   'Linux-aarch64': 'https://github.com/matthuisman/decryptmodules/raw/master/widevine/1.4.9.1088-linux-armv7.so',
                    'Windows-x86_64': 'https://dl.google.com/widevine-cdm/{0}-win-x64.zip',
                    'Windows-x86': 'https://dl.google.com/widevine-cdm/{0}-win-ia32.zip',
                    'Darwin-x86_64': 'https://dl.google.com/widevine-cdm/{0}-mac-x64.zip'}
 
 UNARCHIVE_COMMAND = {'Linux-x86_64': '(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})',
-                     'Linux-arm': '(cd {1} && tar xJfO {0} usr/lib/chromium/libwidevinecdm.so >{1}/{2} && chmod 755 {1}/{2} && rm -f {0})',
-                     'Linux-aarch64': '(cd {1} && tar xJfO {0} usr/lib/chromium/libwidevinecdm.so >{1}/{2} && chmod 755 {1}/{2} && rm -f {0})',
+                     'Linux-arm': '(mv {0} {1} && cd {1} && mv {0} {2} && chmod 755 {2})',
+                     'Linux-aarch64': '(mv {0} {1} && cd {1} && mv {0} {2} && chmod 755 {2})',
                      'Darwin-x86_64': '(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})'}
 
 SSD_WV_DICT = {'Windows': 'ssd_wv.dll',
