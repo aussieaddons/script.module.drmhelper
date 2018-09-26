@@ -1,11 +1,13 @@
 # flake8: noqa
 
-WIDEVINECDM_URL = {'Linux-x86_64': 'https://dl.google.com/widevine-cdm/903-linux-x64.zip',
+CMD_CURRENT_VERSION_URL = 'https://dl.google.com/widevine-cdm/current.txt'
+
+WIDEVINECDM_URL = {'Linux-x86_64': 'https://dl.google.com/widevine-cdm/{0}-linux-x64.zip',
                    'Linux-arm': 'http://odroidxu.leeharris.me.uk/xu3/chromium-widevine-1.4.8.823-2-armv7h.pkg.tar.xz',
                    'Linux-aarch64': 'http://odroidxu.leeharris.me.uk/xu3/chromium-widevine-1.4.8.823-2-armv7h.pkg.tar.xz',
-                   'Windows-x86_64': 'https://dl.google.com/widevine-cdm/903-win-x64.zip',
-                   'Windows-x86': 'https://dl.google.com/widevine-cdm/903-win-ia32.zip',
-                   'Darwin-x86_64': 'https://dl.google.com/widevine-cdm/903-mac-x64.zip'}
+                   'Windows-x86_64': 'https://dl.google.com/widevine-cdm/{0}-win-x64.zip',
+                   'Windows-x86': 'https://dl.google.com/widevine-cdm/{0}-win-ia32.zip',
+                   'Darwin-x86_64': 'https://dl.google.com/widevine-cdm/{0}-mac-x64.zip'}
 
 UNARCHIVE_COMMAND = {'Linux-x86_64': '(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})',
                      'Linux-arm': '(cd {1} && tar xJfO {0} usr/lib/chromium/libwidevinecdm.so >{1}/{2} && chmod 755 {1}/{2} && rm -f {0})',

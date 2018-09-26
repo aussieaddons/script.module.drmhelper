@@ -9,7 +9,6 @@ import platform
 import requests
 import json
 import zipfile
-import shutil
 from pipes import quote
 from distutils.version import LooseVersion
 
@@ -123,15 +122,8 @@ def get_addon(drm=True):
     Check if inputstream.adaptive is installed, attempt to install if not.
     Enable inpustream.adaptive addon.
     """
-    def manual_install(update=False):
-        if get_ia_direct(update, drm):
-            try:
-                addon = xbmcaddon.Addon('inputstream.adaptive')
-                return addon
-            except RuntimeError:
-                return None
-
     addon = None
+
     try:
         enabled_json = ('{"jsonrpc":"2.0","id":1,"method":'
                         '"Addons.GetAddonDetails","params":'
@@ -149,16 +141,15 @@ def get_addon(drm=True):
             addon = xbmcaddon.Addon('inputstream.adaptive')
             log('inputstream.adaptive installed from repo')
         except RuntimeError:
-            if xbmcgui.Dialog().yesno('inputstream.adaptive not in repo',
-                                      'inputstream.adaptive not found in '
-                                      'any installed repositories. Would '
-                                      'you like to download the zip for '
-                                      'your system from a direct link '
-                                      'and install?'):
-                addon = manual_install()
-            if not addon:
-                log('Manual install failed/user selected no')
-                return False
+            log('inputstream.adaptive not installed')
+            xbmcgui.Dialog().ok('inputstream.adaptive not installed',
+                                'inputstream.adaptive not installed. This '
+                                'addon now comes supplied with newer builds '
+                                'of Kodi 18 for Windows/Mac/LibreELEC/OSMC, '
+                                'and can be installed from most Linux package '
+                                'managers eg. "sudo apt install kodi-'
+                                'inputstream-adaptive"')
+        return False
 
     else:  # installed but not enabled. let's enable it.
         if result['result']['addon'].get('enabled') is False:
@@ -171,20 +162,22 @@ def get_addon(drm=True):
                 xbmc.executeJSONRPC(json_string)
             except RuntimeError:
                 log('Failure in enabling inputstream.adaptive')
+                xbmcgui.Dialog().ok('Unable to enable inputstream.adaptive',
+                                    'Unable to enable inputstream.adaptive, '
+                                    'please try to enable manually '
+                                    'and try again')
                 return False
         addon = xbmcaddon.Addon('inputstream.adaptive')
 
     if not is_ia_current(addon):
-        if xbmcgui.Dialog().yesno('inputstream.adaptive version lower than '
-                                  'required', 'inputstream.adaptive version '
-                                  'does not meet requirements. Would '
-                                  'you like to download the zip for '
-                                  'the required version from a direct link '
-                                  'and reinstall?'):
-            addon = manual_install(update=True)
-        else:
-            log('inputstream.adaptive version lower than required, aborting..')
-            return False
+        xbmcgui.Dialog().ok('inputstream.adaptive version lower than '
+                            'required', 'inputstream.adaptive version '
+                            'does not meet requirements. Please '
+                            'update your Kodi installation to a newer '
+                            'v18 build and try again')
+        log('inputstream.adaptive version lower than required, aborting..')
+        return False
+
     return addon
 
 
@@ -213,12 +206,24 @@ def check_inputstream(drm=True):
     try:
         ver = get_kodi_version()
         log('Kodi version: {0}'.format(ver))
-        if float(ver) < 17.0:
-            xbmcgui.Dialog().ok('Kodi 17+ Required',
-                                ('The minimum version of Kodi required for '
-                                 'DASH/DRM protected content is 17.0 - please '
-                                 'upgrade in order to use this feature.'))
-            return False
+
+        if drm:
+            if float(ver) < 18.0:
+                xbmcgui.Dialog().ok('Kodi 18+ Required',
+                                    ('The minimum version of Kodi required '
+                                     'for DRM protected content is 18 - '
+                                     'please upgrade in order to use this '
+                                     'feature.'))
+                return False
+        else:
+            if float(ver) < 17.0:
+                xbmcgui.Dialog().ok('Kodi 17+ Required',
+                                    ('The minimum version of Kodi required '
+                                     'for inputstream.adaptive is 17.0 - '
+                                     'please upgrade in order to use this '
+                                     'feature.'))
+                return False
+
     except ValueError:  # custom builds of Kodi may not follow same convention
         pass
 
@@ -252,7 +257,9 @@ def check_inputstream(drm=True):
         xbmcgui.Dialog().ok('Missing inputstream.adaptive add-on',
                             ('inputstream.adaptive VideoPlayer InputStream '
                              'add-on not found or not enabled. This add-on '
-                             'is required to view DRM protected content.'))
+                             'is required to view DRM protected content. '
+                             'Please update your Kodi installation to a '
+                             'newer v18 build.'))
         return False
 
     # widevine built into android - not supported on 17 atm though
@@ -269,10 +276,14 @@ def check_inputstream(drm=True):
             return False
         return True
 
-    # ??? not sure if ios has widevine support, assuming so for now ???
+    # No support for iOS
     if xbmc.getCondVisibility('system.platform.ios'):
         log('Running on iOS')
-        return True
+        if drm:
+            xbmcgui.Dialog().ok('DRM not supported on iOS devices',
+                                'DRM content cannot be played back on '
+                                'iOS devices.')
+            return False
 
     # only checking for installation of inputstream.adaptive (eg HLS playback)
     if not drm:
@@ -286,12 +297,11 @@ def check_inputstream(drm=True):
             xbmcgui.Dialog().ok('64 bit build for aarch64 not supported',
                                 ('A build of your OS that supports 32 bit '
                                  'userspace binaries is required for DRM '
-                                 'playback. Special builds of LibreELEC '
-                                 'for your platform may be available from '
-                                 'the LibreELEC forums user Raybuntu '
-                                 'for this.'))
+                                 'playback. Try CoreELEC for your device.'))
 
     cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
+    cdm_path2 = xbmc.translatePath('special://xbmc/addons/'
+                                   'inputstream.adaptive')
 
     if not os.path.isfile(os.path.join(cdm_path, widevinecdm_filename)):
         log('Widevine CDM missing')
@@ -306,18 +316,20 @@ def check_inputstream(drm=True):
         else:
             return False
 
-    if not os.path.isfile(os.path.join(cdm_path, ssd_filename)):
+    if not (os.path.isfile(os.path.join(cdm_path, ssd_filename)) or
+            os.path.isfile(os.path.join(cdm_path2, ssd_filename))):
         log('SSD module not found')
         msg1 = 'Missing ssd_wv module required for DRM content'
-        msg2 = '{0} not found in {1}'.format(
+        msg2 = '{0} not found in {1} or {2}'.format(
             drmconfig.SSD_WV_DICT[system_],
-            xbmc.translatePath(addon.getSetting('DECRYPTERPATH')))
-        msg2 = ('Do you want to attempt downloading the missing ssd_wv '
-                'module for your system?')
-        if xbmcgui.Dialog().yesno(msg1, msg2):
-            get_ssd_wv(cdm_path)
-        else:
-            return False
+            cdm_path,
+            cdm_path2)
+        msg3 = ('ssd_wv module is supplied with Windows/Mac/LibreELEC, '
+                'and can be installed from most package managers in Linux '
+                'eg. "sudo apt install kodi-inputstream-adaptive"')
+        xbmcgui.Dialog().ok(msg1, msg2, msg3)
+        return False
+
     return True
 
 
@@ -332,6 +344,17 @@ def unzip_cdm(zpath, cdm_path):
             data = zf.read('widevinecdm.dll')
             f.write(data)
     os.remove(zpath)
+
+
+def get_ssd_wv():
+    xbmcgui.Dialog().ok('No longer supported',
+                        'This feature is no longer supported. Please upgrade '
+                        'your Kodi installation to a newer v18 build, or for '
+                        'Linux installations you should be able to obtain '
+                        'from your package manager eg. '
+                        '"sudo apt update && sudo apt install kodi-inputstream'
+                        '-adaptive"')
+    return False
 
 
 def get_widevinecdm(cdm_path=None):
@@ -355,7 +378,8 @@ def get_widevinecdm(cdm_path=None):
                             'This module cannot be updated on Android')
         return
 
-    url = drmconfig.WIDEVINECDM_URL[plat]
+    current_cdm_ver = requests.get(drmconfig.CMD_CURRENT_VERSION_URL).text
+    url = drmconfig.WIDEVINECDM_URL[plat].format(current_cdm_ver)
     filename = url.split('/')[-1]
 
     if not os.path.isdir(cdm_path):
@@ -386,80 +410,6 @@ def get_widevinecdm(cdm_path=None):
     dp.close()
     xbmcgui.Dialog().ok('Success', '{0} successfully installed at {1}'.format(
         widevinecdm_filename, os.path.join(cdm_path, widevinecdm_filename)))
-
-
-def get_ssd_wv(cdm_path=None):
-    """
-    Download compiled ssd_wv from github repository
-    """
-    if not cdm_path:
-        addon = get_addon()
-        if not addon:
-            xbmcgui.Dialog().ok('inputstream.adaptive not found',
-                                'inputstream.adaptive add-on must be installed'
-                                ' before installing ssd_wv module')
-            return
-        cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
-
-    if xbmc.getCondVisibility('system.platform.android'):
-        log('ssd_wv update - not possible on Android')
-        xbmcgui.Dialog().ok('Not required for Android',
-                            'This module cannot be updated on Android')
-        return
-
-    if system_ == 'Linux' and not is_libreelec():
-        log('ssd_wv update - not possible on linux other than LibreELEC')
-        xbmcgui.Dialog().ok('Not Available for this OS',
-                            'This method is not available for installation '
-                            'on Linux distributions other than LibreELEC. '
-                            'Try installing kodi-inputstream-adaptive '
-                            'package from your terminal (eg Ubuntu. sudo apt '
-                            'install kodi-inputstream-adaptive).')
-        return
-
-    if not os.path.isdir(cdm_path):
-        log('Creating directory: {0}'.format(cdm_path))
-        os.makedirs(cdm_path)
-    ssd = os.path.join(cdm_path, ssd_filename)
-    # preserve link for addons/inputstream.adaptive/lib
-    if os.path.islink(ssd):
-        download_path = os.path.realpath(ssd)
-        download_dir = os.path.dirname(download_path)
-        if not os.path.isdir(download_dir):
-            log('Creating directory: {0}'.format(download_dir))
-            os.makedirs(download_dir)
-    else:
-        download_path = os.path.join(cdm_path, ssd_filename)
-    if os.path.isfile(download_path):
-        log('Removing existing ssd_wv: {0}'.format(download_path))
-        os.remove(download_path)
-
-    try:
-        kodi = drmconfig.KODI_NAME[get_kodi_version()[:2]]
-    # custom builds (SPMC etc.) might have something else here, let's assume
-    # Krypton for now
-    except KeyError:
-        kodi = 'Krypton'
-    commit = drmconfig.CURRENT_IA_VERSION[kodi]['commit']
-    ssdfn, ssdext = ssd_filename.split('.')[0], ssd_filename.split('.')[1]
-    url = '{base}{kodi}/{plat}-{ssdfn}-{commit}.{ssdext}'.format(
-        base=drmconfig.REPO_BASE,
-        kodi=kodi,
-        plat=plat.lower(),
-        ssdfn=ssdfn,
-        commit=commit,
-        ssdext=ssdext)
-
-    if not progress_download(url, download_path, ssd_filename):
-        return
-    os.chmod(download_path, 0755)
-    xbmcgui.Dialog().ok(
-        'Success', ('{fn} version {commit} for Kodi {kodi} '
-                    'successfully installed at {path}'.format(
-                        fn=ssd_filename,
-                        commit=commit,
-                        kodi=kodi,
-                        path=download_path)))
 
 
 def progress_download(url, download_path, display_filename=None):
@@ -506,79 +456,11 @@ def get_ia_direct(update=False, drm=True):
     Download inputstream.adaptive zip file from remote repository and save in
     Kodi's 'home' folder, unzip to addons folder.
     """
-    if not is_supported():
-        return False
-
-    if system_ == 'Linux' and not is_libreelec():
-        log('inputstream.adaptive update not possible on this Linux distro')
-        xbmcgui.Dialog().ok('Not Available for this OS',
-                            'This method is not available for installation '
-                            'on Linux distributions other than LibreELEC. '
-                            'Try installing/updating kodi-inputstream-adaptive'
-                            ' package from your terminal (eg Ubuntu: sudo apt '
-                            'install kodi-inputstream-adaptive).')
-        return False
-
-    try:
-        kodi = drmconfig.KODI_NAME[get_kodi_version()[:2]]
-    # custom builds (SPMC etc.) might have something else here, let's assume
-    # Krypton for now
-    except KeyError:
-        kodi = 'Krypton'
-    ver = drmconfig.CURRENT_IA_VERSION[kodi]['ver']
-    commit = drmconfig.CURRENT_IA_VERSION[kodi]['commit']
-
-    log('Attempting manual install of inputstream.adaptive (update={0}, '
-        'drm={1}, kodi={2})'.format(str(update), str(drm), kodi))
-
-    url = '{base}{kodi}/{plat}-inputstream.adaptive-{ver}-{commit}.zip'.format(
-        base=drmconfig.REPO_BASE,
-        kodi=kodi,
-        plat=plat.lower(),
-        ver=ver,
-        commit=commit)
-
-    filename = url.split('/')[-1]
-    location = os.path.join(xbmc.translatePath('special://home'), filename)
-    if not progress_download(url, location, filename):
-        xbmcgui.Dialog().ok('Download Failed', 'Failed to download {0} from '
-                            '{1}'.format(filename, url))
-        return False
-    else:
-        try:
-            with zipfile.ZipFile(location, "r") as z:
-                addons_path = os.path.join(
-                    xbmc.translatePath('special://home'), 'addons')
-                if update:
-                    ia_path = os.path.join(addons_path, 'inputstream.adaptive')
-                    if os.path.isdir(ia_path):
-                        shutil.rmtree(ia_path)
-                    os.mkdir(ia_path)
-
-                z.extractall(addons_path)
-            xbmc.executebuiltin('UpdateLocalAddons', True)
-            #  enable addon, seems to default to disabled
-            json_string = ('{"jsonrpc":"2.0","id":1,"method":'
-                           '"Addons.SetAddonEnabled","params":'
-                           '{"addonid":"inputstream.adaptive",'
-                           '"enabled":true}}')
-            xbmc.executeJSONRPC(json_string)
-            xbmcgui.Dialog().ok(
-                'Installation complete',
-                ('inputstream.adaptive version {ver} commit '
-                 '{commit} for Kodi {kodi} installed.'.format(
-                     ver=ver,
-                     commit=commit,
-                     kodi=kodi)))
-        except Exception as e:
-            xbmcgui.Dialog().ok('Unzipping failed',
-                                'Unzipping failed error {0}'.format(e))
-        os.remove(location)
-        if drm:
-            if xbmcgui.Dialog().yesno(
-                'Download ssd_wv module?',
-                ('Would you like to update the corresponding '
-                 'ssd_wv module? (recommended if updating '
-                 ' inputstream.adaptive)')):
-                get_ssd_wv()
-        return True
+    xbmcgui.Dialog().ok('No longer supported',
+                        'This feature is no longer supported. Please upgrade '
+                        'your Kodi installation to a newer v18 build, or for '
+                        'Linux installations you should be able to obtain '
+                        'from your package manager eg. '
+                        '"sudo apt update && sudo apt install kodi-inputstream'
+                        '-adaptive"')
+    return False
