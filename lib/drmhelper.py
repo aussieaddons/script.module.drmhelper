@@ -140,6 +140,7 @@ def get_addon(drm=True):
             xbmc.executebuiltin('InstallAddon(inputstream.adaptive)', True)
             addon = xbmcaddon.Addon('inputstream.adaptive')
             log('inputstream.adaptive installed from repo')
+            return addon
         except RuntimeError:
             log('inputstream.adaptive not installed')
             xbmcgui.Dialog().ok('inputstream.adaptive not installed',
