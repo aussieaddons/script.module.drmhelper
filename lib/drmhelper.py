@@ -303,6 +303,8 @@ def check_inputstream(drm=True):
     cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
     cdm_path2 = xbmc.translatePath('special://xbmc/addons/'
                                    'inputstream.adaptive')
+    cdm_path3 = xbmc.translatePath('special://home/addons/'
+                                   'inputstream.adaptive')
 
     if not os.path.isfile(os.path.join(cdm_path, widevinecdm_filename)):
         log('Widevine CDM missing')
@@ -318,13 +320,15 @@ def check_inputstream(drm=True):
             return False
 
     if not (os.path.isfile(os.path.join(cdm_path, ssd_filename)) or
-            os.path.isfile(os.path.join(cdm_path2, ssd_filename))):
+            os.path.isfile(os.path.join(cdm_path2, ssd_filename)) or
+            os.path.isfile(os.path.join(cdm_path3, ssd_filename))):
         log('SSD module not found')
         msg1 = 'Missing ssd_wv module required for DRM content'
-        msg2 = '{0} not found in {1} or {2}'.format(
+        msg2 = '{0} not found in {1}, {2}, or {3}'.format(
             drmconfig.SSD_WV_DICT[system_],
             cdm_path,
-            cdm_path2)
+            cdm_path2,
+            cdm_path3)
         msg3 = ('ssd_wv module is supplied with Windows/Mac/LibreELEC, '
                 'and can be installed from most package managers in Linux '
                 'eg. "sudo apt install kodi-inputstream-adaptive"')
