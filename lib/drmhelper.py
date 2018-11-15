@@ -321,7 +321,9 @@ def check_inputstream(drm=True):
 
     if not (os.path.isfile(os.path.join(cdm_path, ssd_filename)) or
             os.path.isfile(os.path.join(cdm_path2, ssd_filename)) or
-            os.path.isfile(os.path.join(cdm_path3, ssd_filename))):
+            os.path.isfile(os.path.join(cdm_path2 + '/lib', ssd_filename)) or
+            os.path.isfile(os.path.join(cdm_path3, ssd_filename)) or
+            os.path.isfile(os.path.join(cdm_path3 + '/lib/', ssd_filename))):
         log('SSD module not found')
         msg1 = 'Missing ssd_wv module required for DRM content'
         msg2 = '{0} not found in {1}, {2}, or {3}'.format(
