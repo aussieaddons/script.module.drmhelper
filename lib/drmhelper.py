@@ -197,7 +197,7 @@ def is_supported():
     return True
 
 
-def check_inputstream(drm=True):
+def check_inputstream(drm=True, dialogs_v17=True):
     """
     Main function call to check all components required are available for
     DRM playback before setting the resolved URL in Kodi.
@@ -218,6 +218,8 @@ def check_inputstream(drm=True):
                 return False
         else:
             if float(ver) < 17.0:
+                if not dialogs_v17:
+                    return False
                 xbmcgui.Dialog().ok('Kodi 17+ Required',
                                     ('The minimum version of Kodi required '
                                      'for inputstream.adaptive is 17.0 - '
