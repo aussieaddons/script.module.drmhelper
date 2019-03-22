@@ -307,6 +307,8 @@ def check_inputstream(drm=True, dialogs_v17=True):
                                    'inputstream.adaptive')
     cdm_path3 = xbmc.translatePath('special://home/addons/'
                                    'inputstream.adaptive')
+    cdm_path4 = xbmc.translatePath('special://xbmcbinaddons/'
+                                   'inputstream.adaptive/')
 
     if not os.path.isfile(os.path.join(cdm_path, widevinecdm_filename)):
         log('Widevine CDM missing')
@@ -325,7 +327,8 @@ def check_inputstream(drm=True, dialogs_v17=True):
             os.path.isfile(os.path.join(cdm_path2, ssd_filename)) or
             os.path.isfile(os.path.join(cdm_path2 + '/lib', ssd_filename)) or
             os.path.isfile(os.path.join(cdm_path3, ssd_filename)) or
-            os.path.isfile(os.path.join(cdm_path3 + '/lib/', ssd_filename))):
+            os.path.isfile(os.path.join(cdm_path3 + '/lib/', ssd_filename)) or
+            os.path.isfile(os.path.join(cdm_path4, ssd_filename))): 
         log('SSD module not found')
         msg1 = 'Missing ssd_wv module required for DRM content'
         msg2 = '{0} not found in {1}, {2}, or {3}'.format(
