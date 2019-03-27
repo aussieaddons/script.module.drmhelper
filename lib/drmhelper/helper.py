@@ -22,35 +22,32 @@ class DRMHelper(object):
     """DRM Helper"""
 
     def __init__(self):
-        self.system = None
-        self.arch = None
         self.addon = None
 
     def _get_system(self):
         """Get the system platform information"""
 
-        if self.system:
-            return self.system
+        if xbmc.getCondVisibility('System.Platform.UWP'):
+            return 'UWP'
 
-        self.system = platform.system()
+        if '4n2hpmxwrvr6p' in xbmc.translatePath('special://xbmc'):
+            # Look for this app key in the path, which is the only reliable
+            # way we can tell if it's a special UWP build on Kodi <18
+            return 'UWP'
 
         if xbmc.getCondVisibility('System.Platform.Android'):
-            self.system = 'Android'
+            return 'Android'
 
         if xbmc.getCondVisibility('System.Platform.IOS'):
-            self.system = 'IOS'
+            return 'IOS'
 
-        return self.system
+        return platform.system()
 
     def _is_windows(self):
         return self._get_system() == 'Windows'
 
-    @classmethod
-    def _is_windows_uwp(cls):
-        # Look for this app key in the path, which is the only reliable
-        # way we can tell if it's a special UWP build
-        # NOTE: DRM is not supported on UWP due to security
-        return '4n2hpmxwrvr6p' in xbmc.translatePath('special://xbmc')
+    def _is_uwp(self):
+        return self._get_system() == 'UWP'
 
     def _is_mac(self):
         return self._get_system() == 'Darwin'
@@ -74,9 +71,6 @@ class DRMHelper(object):
         return self._get_system() == 'IOS'
 
     def _get_arch(self):
-        if self.arch:
-            return self.arch
-
         arch = platform.machine()
         if arch.startswith('arm'):
             # strip armv6l down to armv6
@@ -92,8 +86,7 @@ class DRMHelper(object):
                 # so we assume it'll always be x64 in this case.
                 arch = 'x64'
 
-        self.arch = arch
-        return self.arch
+        return arch
 
     @classmethod
     def _get_kodi_arch(cls):
@@ -259,7 +252,8 @@ class DRMHelper(object):
                 'Platform not supported',
                 '{0} {1} not supported for DRM playback. '
                 'For more information, see our DRM FAQ at {2}'
-                ''.format(self.system, self.arch, config.DRM_INFO))
+                ''.format(self._get_system(), self._get_arch(),
+                          config.DRM_INFO))
             return False
         return True
 

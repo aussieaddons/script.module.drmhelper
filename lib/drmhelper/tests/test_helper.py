@@ -7,6 +7,11 @@ import mock
 
 import testtools
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+LOG = logging.getLogger()
+
 
 def get_xbmc_cond_visibility(cond):
     global HACK_PLATFORMS
@@ -27,29 +32,37 @@ class DRMHelperTests(testtools.TestCase):
                 sys = h._get_system()
                 self.assertEqual(sys, system['expected_system'])
 
-    def test_is_windows(self):
+    @mock.patch.object(helper.DRMHelper, '_get_system')
+    def test_is_windows(self, mock_get_system):
         for system in fakes.SYSTEMS:
-            h = helper.DRMHelper()
-            sys = h._get_system()
-            is_windows = h._is_windows()
-            if sys == system['expected_system']:
-                self.assertTrue(is_windows)
-            else:
-                self.assertFalse(is_windows)
+            if system['expected_system'] == 'Windows':
+                mock_get_system.return_value = 'Windows'
+                h = helper.DRMHelper()
+                self.assertTrue(h._is_windows())
 
     @mock.patch('xbmc.translatePath')
-    def test_is_windows_uwp(self, mock_trans_path):
-        mock_trans_path.return_value = 'this special 4n2hpmxwrvr6p key'
-        h = helper.DRMHelper()
-        is_windows_uwp = h._is_windows_uwp()
-        self.assertTrue(is_windows_uwp)
+    @mock.patch.object(helper.DRMHelper, '_get_system')
+    def test_is_uwp_kodi17(self, mock_get_system, mock_trans_path):
+        for system in fakes.SYSTEMS:
+            if system['system'] == 'Windows':
+                mock_get_system.return_value = 'UWP'  # Kodi <18
+                mock_trans_path.return_value = 'foo bar 4n2hpmxwrvr6p key'
+                h = helper.DRMHelper()
+                self.assertTrue(h._is_uwp())
+
+    @mock.patch.object(helper.DRMHelper, '_get_system')
+    def test_is_uwp_kodi18(self, mock_get_system):
+        for system in fakes.SYSTEMS:
+            if system['system'] == 'Windows':
+                mock_get_system.return_value = 'UWP'
+                h = helper.DRMHelper()
+                self.assertTrue(h._is_uwp())
 
     @mock.patch('drmhelper.utils.get_info_label')
     def test_is_libreelec(self, mock_get_info_label):
         mock_get_info_label.return_value = 'blah blah LibreElec blah blah'
         h = helper.DRMHelper()
-        is_libreelec = h._is_libreelec()
-        self.assertTrue(is_libreelec)
+        self.assertTrue(h._is_libreelec())
 
     @mock.patch.object(helper.DRMHelper, '_get_system')
     def test_is_mac(self, mock_get_system):
@@ -57,30 +70,29 @@ class DRMHelperTests(testtools.TestCase):
             mock_get_system.return_value = system['expected_system']
             if system['expected_system'] == 'Darwin':
                 h = helper.DRMHelper()
+                self.assertTrue(h._is_mac())
+
+    @mock.patch.object(helper.DRMHelper, '_get_system')
+    def test_is_android(self, mock_get_system):
+        for system in fakes.SYSTEMS:
+            mock_get_system.return_value = system['expected_system']
+            if system['expected_system'] == 'Android':
+                h = helper.DRMHelper()
                 sys = h._get_system()
-                is_mac = h._is_mac()
-                if is_mac:
-                    self.assertEqual(sys, system['expected_system'])
+                is_android = h._is_android()
+                if sys == system['expected_system']:
+                    self.assertTrue(is_android)
 
-    def test_is_android(self):
+    @mock.patch.object(helper.DRMHelper, '_get_system')
+    def test_is_linux(self, mock_get_system):
         for system in fakes.SYSTEMS:
-            h = helper.DRMHelper()
-            sys = h._get_system()
-            is_android = h._is_android()
-            if sys == system['expected_system']:
-                self.assertTrue(is_android)
-            else:
-                self.assertFalse(is_android)
-
-    def test_is_linux(self):
-        for system in fakes.SYSTEMS:
-            h = helper.DRMHelper()
-            sys = h._get_system()
-            is_linux = h._is_linux()
-            if sys == system['expected_system']:
-                self.assertTrue(is_linux)
-            else:
-                self.assertFalse(is_linux)
+            mock_get_system.return_value = system['expected_system']
+            if system['expected_system'] == 'Linux':
+                h = helper.DRMHelper()
+                sys = h._get_system()
+                is_linux = h._is_linux()
+                if sys == system['expected_system']:
+                    self.assertTrue(is_linux)
 
     def test_get_kodi_arch(self):
         arch = helper.DRMHelper._get_kodi_arch()

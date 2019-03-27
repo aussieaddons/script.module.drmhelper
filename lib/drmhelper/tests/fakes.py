@@ -62,13 +62,24 @@ SYSTEMS = [
         'expected_system': 'Android',
         'expected_arch': 'arm',
     },
+    # Windows (UWP)
+    {
+        'system': 'Windows',
+        'platforms': ['System.Platform.Windows',
+                      'System.Platform.UWP'],
+        'machine': '',
+        'arch': '64bit',
+        'expected_system': 'UWP',
+        'expected_arch': 'x64',
+    },
     # Xbox One
     {
         'system': 'Windows',
-        'platforms': ['System.Platform.Windows'],
+        'platforms': ['System.Platform.Windows',
+                      'System.Platform.UWP'],
         'machine': '',
         'arch': '64bit',
-        'expected_system': 'Windows',
+        'expected_system': 'UWP',
         'expected_arch': 'x64',
     },
 ]
