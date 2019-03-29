@@ -3,6 +3,7 @@ import os
 import platform
 import posixpath
 import zipfile
+
 from distutils.version import LooseVersion
 from pipes import quote
 
@@ -12,9 +13,7 @@ from drmhelper import utils
 import requests
 
 import xbmc
-
 import xbmcaddon
-
 import xbmcgui
 
 
@@ -22,32 +21,35 @@ class DRMHelper(object):
     """DRM Helper"""
 
     def __init__(self):
+        self.system = None
+        self.arch = None
         self.addon = None
 
     def _get_system(self):
         """Get the system platform information"""
 
-        if xbmc.getCondVisibility('System.Platform.UWP'):
-            return 'UWP'
+        if self.system:
+            return self.system
 
-        if '4n2hpmxwrvr6p' in xbmc.translatePath('special://xbmc'):
-            # Look for this app key in the path, which is the only reliable
-            # way we can tell if it's a special UWP build on Kodi <18
-            return 'UWP'
+        self.system = platform.system()
 
         if xbmc.getCondVisibility('System.Platform.Android'):
-            return 'Android'
+            self.system = 'Android'
 
         if xbmc.getCondVisibility('System.Platform.IOS'):
-            return 'IOS'
+            self.system = 'IOS'
 
-        return platform.system()
+        return self.system
 
     def _is_windows(self):
         return self._get_system() == 'Windows'
 
-    def _is_uwp(self):
-        return self._get_system() == 'UWP'
+    @classmethod
+    def _is_windows_uwp(cls):
+        # Look for this app key in the path, which is the only reliable
+        # way we can tell if it's a special UWP build
+        # NOTE: DRM is not supported on UWP due to security
+        return '4n2hpmxwrvr6p' in xbmc.translatePath('special://xbmc')
 
     def _is_mac(self):
         return self._get_system() == 'Darwin'
@@ -71,6 +73,9 @@ class DRMHelper(object):
         return self._get_system() == 'IOS'
 
     def _get_arch(self):
+        if self.arch:
+            return self.arch
+
         arch = platform.machine()
         if arch.startswith('arm'):
             # strip armv6l down to armv6
@@ -86,7 +91,8 @@ class DRMHelper(object):
                 # so we assume it'll always be x64 in this case.
                 arch = 'x64'
 
-        return arch
+        self.arch = arch
+        return self.arch
 
     @classmethod
     def _get_kodi_arch(cls):
@@ -135,7 +141,8 @@ class DRMHelper(object):
         return config.MIN_IA_VERSION.get(kodi_ver)
 
     def _is_ia_current(self, addon, latest=False):
-        """
+        """Check if InputStream Adaptive is a current enough version
+
         Check if inputstream.adaptive addon meets the minimum version
         requirements.
         latest -- checks if addon is equal to the latest available compiled
@@ -252,8 +259,7 @@ class DRMHelper(object):
                 'Platform not supported',
                 '{0} {1} not supported for DRM playback. '
                 'For more information, see our DRM FAQ at {2}'
-                ''.format(self._get_system(), self._get_arch(),
-                          config.DRM_INFO))
+                ''.format(self.system, self.arch, config.DRM_INFO))
             return False
         return True
 
@@ -292,11 +298,12 @@ class DRMHelper(object):
         return True
 
     def check_inputstream(self, drm=True):
-        """
+        """Check InputStream Adaptive is installed and ready
+
         Main function call to check all components required are available for
         DRM playback before setting the resolved URL in Kodi.
         drm -- set to false if you just want to check for inputstream.adaptive
-            and not widevine components eg. HLS playback
+        and not widevine components eg. HLS playback
         """
         # DRM not supported
         if drm and not self._is_wv_drm_supported():
@@ -357,7 +364,7 @@ class DRMHelper(object):
                 '{0} not found in any expected location.'.format(cdm_fn),
                 'Do you want to attempt downloading the missing '
                     'Widevine CDM module to your system for DRM support?'):
-                self._get_wvcdm(cdm_paths)
+                self._get_wvcdm(cdm_paths[0])  # Use first path
             else:
                 # TODO(andy): Ask to never attempt again
                 return False
@@ -376,9 +383,7 @@ class DRMHelper(object):
         return True
 
     def _unzip_cdm(self, zpath, cdm_path):
-        """
-        extract windows widevinecdm.dll from downloaded zip
-        """
+        """Extract windows widevinecdm.dll from downloaded zip"""
         cdm_fn = posixpath.join(cdm_path, self._get_wvcdm_filename())
         utils.log('unzipping widevinecdm.dll from {0} to {1}'
                   ''.format(zpath, cdm_fn))
@@ -389,7 +394,8 @@ class DRMHelper(object):
         os.remove(zpath)
 
     def _get_wvcdm(self, cdm_path=None):
-        """
+        """Get the Widevine CDM library
+
         Win/Mac: download Chrome extension blob ~2MB and extract
         widevinecdm.dll
         Linux: download Chrome package ~50MB and extract libwidevinecdm.so
