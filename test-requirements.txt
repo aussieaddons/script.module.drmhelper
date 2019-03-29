@@ -1,0 +1,5 @@
+mock
+testtools
+pytest
+requests
+git+https://github.com/romanvm/Kodistubs.git#egg=Kodistubs
