@@ -351,9 +351,8 @@ class DRMHelper(object):
                 utils.dialog(
                     '64 bit build for aarch64 not supported',
                     'A build of your OS that supports 32 bit userspace '
-                    'binaries is required for DRM playback. Special builds '
-                    'of LibreELEC for your platform may be available from '
-                    'the LibreELEC forums user Raybuntu for this.')
+                    'binaries is required for DRM playback. We recommend '
+                    'CoreELEC to support this.')
 
         cdm_paths = [
             xbmc.translatePath(addon.getSetting('DECRYPTERPATH')),
@@ -380,7 +379,7 @@ class DRMHelper(object):
                 '{0} not found in any expected location.'.format(ssd_fn),
                 'ssd_wv module is supplied with Windows/Mac/LibreELEC, '
                 'and can be installed from most package managers in Linux '
-                'eg. "sudo apt install kodi-inputstream-adaptive"')
+                'eg. "apt install kodi-inputstream-adaptive"')
             return False
 
         return True
