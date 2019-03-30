@@ -114,7 +114,10 @@ class DRMHelper(object):
             ('Linux', 'arm')
             ('Android', 'aarch64')
         """
-        return (self._get_system(), config.ARCH_DICT[self._get_arch()])
+        arch = self._get_arch()
+        if arch in config.ARCH_DICT:
+            arch = config.ARCH_DICT[arch]
+        return (self._get_system(), arch)
 
     def _is_wv_drm_supported(self):
         plat = self._get_platform()
