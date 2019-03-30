@@ -88,8 +88,8 @@ class DRMHelper(object):
                 arch = config.WINDOWS_BITNESS.get(kodi_arch)
             except ImportError:
                 # No module named _subprocess on Xbox One, so this call fails
-                # so we assume it'll always be x64 in this case.
-                arch = 'x64'
+                # so we assume it'll always be x86_64 in this case.
+                arch = 'x86_64'
 
         self.arch = arch
         return self.arch
@@ -100,21 +100,21 @@ class DRMHelper(object):
             arch = platform.architecture()[0]
         except ImportError:
             # No module named _subprocess on Xbox One, so this call fails
-            # so we assume it'll always be x64 in this case.
-            arch = 'x64'
+            # so we assume it'll always be x86_64 in this case.
+            arch = 'x86_64'
         return arch
 
     def _get_platform(self):
         """Return a tuple for our system/arch
 
         For example:
-            ('Windows', 'x64')
-            ('Darwin', 'x64')
+            ('Windows', 'x86')
+            ('Darwin', 'x86_64')
             ('Linux', 'x86_64')
             ('Linux', 'arm')
             ('Android', 'aarch64')
         """
-        return (self._get_system(), self._get_arch())
+        return (self._get_system(), config.ARCH_DICT[self._get_arch()])
 
     def _is_wv_drm_supported(self):
         plat = self._get_platform()
