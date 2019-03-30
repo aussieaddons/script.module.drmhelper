@@ -10,16 +10,16 @@ WIDEVINE_CDM_URL = {
     ('Linux', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-linux-x64.zip',
     ('Linux', 'arm'): 'https://github.com/matthuisman/decryptmodules/raw/master/widevine/1.4.9.1088-linux-armv7.so',
     ('Linux', 'aarch64'): 'https://github.com/matthuisman/decryptmodules/raw/master/widevine/1.4.9.1088-linux-armv7.so',
-    ('Windows', 'x64'): 'https://dl.google.com/widevine-cdm/{0}-win-x64.zip',
+    ('Windows', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-win-x64.zip',
     ('Windows', 'x86'): 'https://dl.google.com/widevine-cdm/{0}-win-ia32.zip',
-    ('Darwin', 'x64'): 'https://dl.google.com/widevine-cdm/{0}-mac-x64.zip'
+    ('Darwin', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-mac-x64.zip'
 }
 
 UNARCHIVE_COMMAND = {
     ('Linux', 'x86_64'): '(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})',
     ('Linux','arm'): '(cd {1} && mv {0} {2} && chmod 755 {2})',
     ('Linux', 'aarch64'): '(cd {1} && mv {0} {2} && chmod 755 {2})',
-    ('Darwin', 'x64'): '(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})',
+    ('Darwin', 'x86_64'): '(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})',
 }
 
 SSD_WV_DICT = {
@@ -44,17 +44,17 @@ ARCH_DICT = {
     'arm': 'arm',
     'armv7': 'arm',
     'armv8': 'aarch64',
-    'AMD64': 'x64',
-    'x86_64': 'x64',
+    'AMD64': 'x86_64',
+    'x86_64': 'x86_64',
     'x86': 'x86',
     'i386': 'x86',
     'i686': 'x86'
 }
 
 SUPPORTED_WV_DRM_PLATFORMS = [
-    ('Windows', 'x64'),
+    ('Windows', 'x86_64'),
     ('Windows', 'x86'),
-    ('Darwin', 'x64'),
+    ('Darwin', 'x86_64'),
     ('Darwin', 'arm'),
     ('Darwin', 'aarch64'),
     ('Linux', 'x86_64'),
@@ -67,7 +67,7 @@ SUPPORTED_WV_DRM_PLATFORMS = [
 
 WINDOWS_BITNESS = {
     '32bit': 'x86',
-    '64bit': 'x64'
+    '64bit': 'x86_64'
 }
 
 
