@@ -20,9 +20,6 @@ import xbmcgui
 class DRMHelper(object):
     """DRM Helper"""
 
-    def __init__(self):
-        self.addon = None
-
     def _get_system(self):
         """Get the system platform information"""
 
@@ -176,15 +173,10 @@ class DRMHelper(object):
             return False
 
     def _get_addon(self):
-        if self.addon:
-            return self.addon
         try:
-            addon = xbmcaddon.Addon('inputstream.adaptive')
+            return xbmcaddon.Addon('inputstream.adaptive')
         except Exception:
             return None
-
-        self.addon = addon
-        return self.addon
 
     def _enable_addon(self):
         req = {
@@ -196,11 +188,27 @@ class DRMHelper(object):
         if not result:
             utils.log('Failure in enabling inputstream.adaptive')
             return False
+        return True
+
+    def _install_addon(self):
+        try:  # see if there's an installed repo that has it
+            xbmc.executebuiltin('InstallAddon(inputstream.adaptive)', True)
+            addon = self._get_addon()
+            utils.log('inputstream.adaptive installed from repo')
+            return addon
+        except RuntimeError:
+            utils.dialog('inputstream.adaptive not installed',
+                         'inputstream.adaptive not installed. This '
+                         'addon now comes supplied with newer builds '
+                         'of Kodi 18 for Windows/Mac/LibreELEC/OSMC, '
+                         'and can be installed from most Linux package '
+                         'managers eg. "sudo apt install kodi-'
+                         'inputstream-adaptive"')
 
     def get_addon(self, drm=True):
-        """
+        """Enable and get the inpustream.adaptive add-on
+
         Check if inputstream.adaptive is installed, attempt to install if not.
-        Enable inpustream.adaptive addon.
         """
         addon = None
 
@@ -215,27 +223,14 @@ class DRMHelper(object):
 
         if 'error' in result:  # not installed
             utils.log('inputstream.adaptive not currently installed')
-            try:  # see if there's an installed repo that has it
-                xbmc.executebuiltin('InstallAddon(inputstream.adaptive)', True)
-                addon = xbmcaddon.Addon('inputstream.adaptive')
-                utils.log('inputstream.adaptive installed from repo')
-                return addon
-            except RuntimeError:
-                utils.dialog('inputstream.adaptive not installed',
-                             'inputstream.adaptive not installed. This '
-                             'addon now comes supplied with newer builds '
-                             'of Kodi 18 for Windows/Mac/LibreELEC/OSMC, '
-                             'and can be installed from most Linux package '
-                             'managers eg. "sudo apt install kodi-'
-                             'inputstream-adaptive"')
-            return False
-
+            addon = self._install_addon()
+            if not addon:
+                return False  # error installing
         else:  # installed but not enabled. let's enable it.
             if result['result']['addon'].get('enabled') is False:
                 utils.log('inputstream.adaptive not enabled, enabling...')
                 self._enable_addon()
-
-            addon = xbmcaddon.Addon('inputstream.adaptive')
+            addon = self._get_addon()
 
         if not self._is_ia_current(addon):
             utils.dialog('inputstream.adaptive version lower than '

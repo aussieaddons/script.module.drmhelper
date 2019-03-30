@@ -7,11 +7,6 @@ import mock
 
 import testtools
 
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-LOG = logging.getLogger()
-
 
 def get_xbmc_cond_visibility(cond):
     global HACK_PLATFORMS
@@ -144,8 +139,122 @@ class DRMHelperTests(testtools.TestCase):
             result = h._get_wvcdm_filename()
             self.assertEqual(result, wvcdm_filename)
 
-#    def test_get_latest_ia_version(self):
-#
-#    def test_get_minimum_ia_version(self):
-#
-#    def test_should_update_ia(self):
+    @mock.patch('drmhelper.utils.get_kodi_major_version')
+    def test_get_latest_ia_version(self, mock_kodi_maj_ver):
+        test_kodi_ver = 18
+        mock_kodi_maj_ver.return_value = test_kodi_ver
+        h = helper.DRMHelper()
+        result = h._get_latest_ia_version()
+        expected = config.LATEST_IA_VERSION[test_kodi_ver]['ver']
+        self.assertEqual(result, expected)
+
+    @mock.patch('drmhelper.utils.get_kodi_major_version')
+    def test_get_minimum_ia_version(self, mock_kodi_maj_ver):
+        test_kodi_ver = 18
+        mock_kodi_maj_ver.return_value = test_kodi_ver
+        h = helper.DRMHelper()
+        result = h._get_minimum_ia_version()
+        expected = config.MIN_IA_VERSION[test_kodi_ver]
+        self.assertEqual(result, expected)
+
+    def test_is_ia_current(self):
+        with mock.patch.object(helper.DRMHelper, '_get_minimum_ia_version',
+                               return_value='0.0.1'):
+            fake_addon = fakes.FakeAddon()
+            h = helper.DRMHelper()
+            result = h._is_ia_current(fake_addon)
+            self.assertTrue(result)
+
+    def test_is_ia_current_negative(self):
+        with mock.patch.object(helper.DRMHelper, '_get_minimum_ia_version',
+                               return_value='0.0.2'):
+            fake_addon = fakes.FakeAddon()
+            h = helper.DRMHelper()
+            result = h._is_ia_current(fake_addon)
+            self.assertFalse(result)
+
+    def test_is_ia_current_latest(self):
+        with mock.patch.object(helper.DRMHelper, '_get_latest_ia_version',
+                               return_value={'ver': '0.0.1'}):
+            fake_addon = fakes.FakeAddon()
+            h = helper.DRMHelper()
+            result = h._is_ia_current(fake_addon, latest=True)
+            self.assertTrue(result)
+
+    def test_is_ia_current_latest_negative(self):
+        with mock.patch.object(helper.DRMHelper, '_get_latest_ia_version',
+                               return_value={'ver': '0.0.2'}):
+            fake_addon = fakes.FakeAddon()
+            h = helper.DRMHelper()
+            result = h._is_ia_current(fake_addon, latest=True)
+            self.assertFalse(result)
+
+    @mock.patch('xbmc.executeJSONRPC')
+    def test_execute_json_rpc(self, mock_exec_json_rpc):
+        mock_exec_json_rpc.return_value = '{"ok": true}'
+        method = 'test_method',
+        params = {'test_param': True}
+        h = helper.DRMHelper()
+        h._execute_json_rpc(method, params)
+        mock_exec_json_rpc.assert_called_once()
+
+    @mock.patch('xbmcaddon.Addon')
+    def test_private_get_addon(self, mock_get_addon):
+        fake_addon = fakes.FakeAddon()
+        mock_get_addon.return_value = fake_addon
+        h = helper.DRMHelper()
+        result = h._get_addon()
+        mock_get_addon.assert_called_once_with('inputstream.adaptive')
+        self.assertEqual(result, fake_addon)
+
+    def test_enable_addon(self):
+        with mock.patch.object(helper.DRMHelper, '_execute_json_rpc',
+                               return_value=True):
+            h = helper.DRMHelper()
+            result = h._enable_addon()
+            self.assertTrue(result)
+
+    def test_enable_addon_negative(self):
+        with mock.patch.object(helper.DRMHelper, '_execute_json_rpc',
+                               return_value=None):
+            h = helper.DRMHelper()
+            result = h._enable_addon()
+            self.assertFalse(result)
+
+    @mock.patch('xbmc.executebuiltin')
+    def test_install_addon(self, mock_executebuiltin):
+        fake_addon = fakes.FakeAddon()
+        with mock.patch.object(helper.DRMHelper, '_get_addon',
+                               return_value=fake_addon):
+            h = helper.DRMHelper()
+            result = h._install_addon()
+            self.assertEqual(result, fake_addon)
+
+    def test_get_addon_enable_error(self):
+        with mock.patch.object(helper.DRMHelper, '_execute_json_rpc',
+                               return_value=None):
+            h = helper.DRMHelper()
+            result = h.get_addon()
+            self.assertFalse(result)
+
+    def test_get_addon_install_error(self):
+        with mock.patch.object(helper.DRMHelper, '_execute_json_rpc',
+                               return_value={"error": "message"}):
+            with mock.patch.object(helper.DRMHelper, '_install_addon',
+                                   return_value=None):
+                h = helper.DRMHelper()
+                result = h.get_addon()
+                self.assertFalse(result)
+
+    def test_get_addon_install_ok(self):
+        rpc_success = {"result": {"addon": {"enabled": True}}}
+        fake_addon = fakes.FakeAddon()
+        with mock.patch.object(helper.DRMHelper, '_execute_json_rpc',
+                               return_value=rpc_success):
+            with mock.patch.object(helper.DRMHelper, '_install_addon',
+                                   return_value=fake_addon):
+                with mock.patch.object(helper.DRMHelper, '_is_ia_current',
+                                       return_value=True):
+                    h = helper.DRMHelper()
+                    result = h.get_addon()
+                    #self.assertEqual(result, fake_addon)
