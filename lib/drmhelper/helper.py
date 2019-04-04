@@ -358,6 +358,7 @@ class DRMHelper(object):
             xbmc.translatePath(addon.getSetting('DECRYPTERPATH')),
             xbmc.translatePath('special://xbmc/addons/inputstream.adaptive'),
             xbmc.translatePath('special://home/addons/inputstream.adaptive'),
+            xbmc.translatePath('special://xbmcbinaddons/inputstream.adaptive')
         ]
         cdm_fn = self._get_wvcdm_filename()
         if not any(os.path.isfile(os.path.join(p, cdm_fn)) for p in cdm_paths):
