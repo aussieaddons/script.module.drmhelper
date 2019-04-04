@@ -8,8 +8,8 @@ CMD_CURRENT_VERSION_URL = 'https://dl.google.com/widevine-cdm/current.txt'
 
 WIDEVINE_CDM_URL = {
     ('Linux', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-linux-x64.zip',
-    ('Linux', 'arm'): 'https://github.com/matthuisman/decryptmodules/raw/master/widevine/1.4.9.1088-linux-armv7.so',
-    ('Linux', 'aarch64'): 'https://github.com/matthuisman/decryptmodules/raw/master/widevine/1.4.9.1088-linux-armv7.so',
+    ('Linux', 'arm'): 'https://k.mjh.nz/.decryptmodules/widevine/1.4.9.1088-linux-armv7.so',
+    ('Linux', 'aarch64'): 'https://k.mjh.nz/.decryptmodules/widevine/1.4.9.1088-linux-armv7.so',
     ('Windows', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-win-x64.zip',
     ('Windows', 'x86'): 'https://dl.google.com/widevine-cdm/{0}-win-ia32.zip',
     ('Darwin', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-mac-x64.zip'
