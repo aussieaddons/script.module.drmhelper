@@ -350,8 +350,6 @@ class DRMHelper(object):
 
         cdm_paths = [
             xbmc.translatePath(addon.getSetting('DECRYPTERPATH')),
-            xbmc.translatePath('special://xbmc/addons/inputstream.adaptive'),
-            xbmc.translatePath('special://home/addons/inputstream.adaptive'),
             xbmc.translatePath('special://xbmcbinaddons/inputstream.adaptive')
         ]
         cdm_fn = self._get_wvcdm_filename()
