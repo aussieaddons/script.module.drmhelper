@@ -55,8 +55,6 @@ SUPPORTED_WV_DRM_PLATFORMS = [
     ('Windows', 'x86_64'),
     ('Windows', 'x86'),
     ('Darwin', 'x86_64'),
-    ('Darwin', 'arm'),
-    ('Darwin', 'aarch64'),
     ('Linux', 'x86_64'),
     ('Linux', 'arm'),
     ('Linux', 'aarch64'),

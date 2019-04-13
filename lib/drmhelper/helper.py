@@ -28,7 +28,7 @@ class DRMHelper(object):
 
         if '4n2hpmxwrvr6p' in xbmc.translatePath('special://xbmc'):
             # Look for this app key in the path, which is the only reliable
-            # way we can tell if it's a special UWP build on Kodi <18
+            # way we can tell if it's a special UWP build on Kodi v17
             return 'UWP'
 
         if xbmc.getCondVisibility('System.Platform.Android'):
@@ -108,6 +108,19 @@ class DRMHelper(object):
         if arch in config.ARCH_DICT:
             arch = config.ARCH_DICT[arch]
         return (self._get_system(), arch)
+
+    def get_platform_name(self):
+        """Return a friendlier platform name"""
+        system = self._get_system()
+        arch = self._get_arch()
+
+        if system == 'Darwin':
+            system = 'Mac OS X'
+
+        if system == 'UWP':
+            system = 'Windows UWP/Xbox One'
+
+        return '{0} ({1})'.format(system, arch)
 
     def _is_wv_drm_supported(self):
         plat = self._get_platform()
@@ -241,17 +254,16 @@ class DRMHelper(object):
             return False
         return addon
 
-    def is_supported(self):
+    def is_wv_drm_supported(self):
         """Is platform supported"""
         # TODO(andy): Store something in settings to prevent this message
-        # appearing more than once
+        # appearing more than once?
         if not self._is_wv_drm_supported():
             utils.dialog(
                 'Platform not supported',
-                '{0} {1} not supported for DRM playback. '
-                'For more information, see our DRM FAQ at {2}'
-                ''.format(self._get_system(), self._get_arch(),
-                          config.DRM_INFO))
+                '{0} not supported for DRM playback. '
+                'For more information, see our DRM FAQ at {1}'
+                ''.format(self.get_platform_name(), config.DRM_INFO))
             return False
         return True
 
@@ -298,7 +310,7 @@ class DRMHelper(object):
         and not widevine components eg. HLS playback
         """
         # DRM not supported
-        if drm and not self._is_wv_drm_supported():
+        if drm and not self.is_wv_drm_supported():
             utils.log('DRM not supported')
             return False
 
