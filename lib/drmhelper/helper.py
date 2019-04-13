@@ -327,6 +327,11 @@ class DRMHelper(object):
                 'protected content.')
             return False
 
+        # widevine built into android - not supported on 17 atm though
+        if self._is_android():
+            utils.log('Running on Android')
+            return True
+
         # checking for installation of inputstream.adaptive (eg HLS playback)
         if not drm:
             utils.log('DRM checking not requested')
@@ -347,9 +352,7 @@ class DRMHelper(object):
         ]
         cdm_fn = self._get_wvcdm_filename()
 
-        resolved_paths = [(os.path.join(p, cdm_fn)) for p in cdm_paths]
-        utils.log("Resolved CDM paths: {0}".format(resolved_paths))
-        if not any(os.path.isfile(p) for p in resolved_paths):
+        if not any(os.path.isfile(os.path.join(p, cdm_fn)) for p in cdm_paths):
             if utils.dialog_yn(
                 'Missing Widevine module',
                 '{0} not found in any expected location.'.format(cdm_fn),
