@@ -117,6 +117,9 @@ class DRMHelper(object):
         if system == 'Darwin':
             system = 'Mac OS X'
 
+        if system == 'IOS':
+            system = 'iOS'
+
         if system == 'UWP':
             system = 'Windows UWP/Xbox One'
 
@@ -314,6 +317,14 @@ class DRMHelper(object):
             utils.log('DRM not supported')
             return False
 
+        # Kodi version too old
+        if drm and utils.get_kodi_major_version() < 18:
+            utils.dialog(
+                'Kodi version not supported for DRM',
+                'This version of Kodi is not currently supported for viewing '
+                'DRM encrypted content. Please upgrade to Kodi v18.')
+            return False
+
         addon = self.get_addon()
         if not addon:
             utils.dialog(
@@ -321,24 +332,6 @@ class DRMHelper(object):
                 'inputstream.adaptive VideoPlayer InputStream add-on not '
                 'found or not enabled. This add-on is required to view DRM '
                 'protected content.')
-            return False
-
-        # widevine built into android - not supported on 17 atm though
-        if self._is_android():
-            utils.log('Running on Android')
-            if utils.get_kodi_major_version() < 18 and drm:
-                utils.dialog(
-                    'Kodi 17 on Android not supported',
-                    'Kodi 17 is not currently supported for Android with '
-                    'encrypted content. Please upgrade to Kodi v18.')
-                return False
-            return True
-
-        # iOS not supported
-        if self._is_ios():
-            utils.log('DRM not supported on iOS devices',
-                      'DRM content cannot be played back on '
-                      'iOS devices.')
             return False
 
         # checking for installation of inputstream.adaptive (eg HLS playback)
@@ -362,7 +355,10 @@ class DRMHelper(object):
             xbmc.translatePath('special://xbmcbinaddons/inputstream.adaptive')
         ]
         cdm_fn = self._get_wvcdm_filename()
-        if not any(os.path.isfile(os.path.join(p, cdm_fn)) for p in cdm_paths):
+
+        resolved_paths = [(os.path.join(p, cdm_fn)) for p in cdm_paths]
+        utils.log("Resolved CDM paths: {0}".format(resolved_paths))
+        if not any(os.path.isfile(p) for p in resolved_paths):
             if utils.dialog_yn(
                 'Missing Widevine module',
                 '{0} not found in any expected location.'.format(cdm_fn),
