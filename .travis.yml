@@ -2,40 +2,40 @@ language: python
 python: 2.7
 env:
   global:
-    - secure: "fhIHFHOdj9GtJdMrxIQEgpbMv5oEMqT9eaaUdGhXOmzWRJKdPHlGgTt7gKhAoYNzAO5irLXQw96lMVKXPLDa4VAeGvP6IfrupqhkP0GlY3OxXAmZjP8+9eZMC6rzGoWb5h4ep+cMKfi27+NzMK+eZ2CGXlqx4b7UeBIk2JEE61AU60/xX21Vrc7ccREk8eskzTzQ5TEgTfJdgy2RQSg+keerlhFqxJarJ3CZyhtPqmEpDF/UDwCLpuuXKxsHL8TbR2JIWNXrJmAYiG6IZ4q4PBLWx0ydKW4LslGbpiu3r0TI/1+bQAZ5BG+MmLfqyrAQsgyoLAY2pd3V+e0BvG1Xo+hfGFp/igXgcHPejS7Ef6LZtGAB/ippBouIotfwEMmx6bl9JSaWAKXTJtB5GnVYqJvHf8adtYz6neggDZZmiWXLZFCqVFfo2jEfU8o/EjSN/wF1CYkiVOr8FflTKKYZrPBk28ltoWwX17GqUul/2iG3+AwnyM900Hx8FFxpVcr8WRWM1V3gCEPo+Mu3IAgnV5Xz3BEudzvGleYr+73YRE199D6TF2UYjX1Jg8Tz/THJwxT7TAkUdSGKv2saeMZ0GdPhJ7sXffEx0jCAypYGZOvGD7tVFSBBDXV0A3KjTTBo67XT3gx3wZWZgCjuh/dUknscqcOXO3FMXv6xhYpH6bM="
+  - secure: fhIHFHOdj9GtJdMrxIQEgpbMv5oEMqT9eaaUdGhXOmzWRJKdPHlGgTt7gKhAoYNzAO5irLXQw96lMVKXPLDa4VAeGvP6IfrupqhkP0GlY3OxXAmZjP8+9eZMC6rzGoWb5h4ep+cMKfi27+NzMK+eZ2CGXlqx4b7UeBIk2JEE61AU60/xX21Vrc7ccREk8eskzTzQ5TEgTfJdgy2RQSg+keerlhFqxJarJ3CZyhtPqmEpDF/UDwCLpuuXKxsHL8TbR2JIWNXrJmAYiG6IZ4q4PBLWx0ydKW4LslGbpiu3r0TI/1+bQAZ5BG+MmLfqyrAQsgyoLAY2pd3V+e0BvG1Xo+hfGFp/igXgcHPejS7Ef6LZtGAB/ippBouIotfwEMmx6bl9JSaWAKXTJtB5GnVYqJvHf8adtYz6neggDZZmiWXLZFCqVFfo2jEfU8o/EjSN/wF1CYkiVOr8FflTKKYZrPBk28ltoWwX17GqUul/2iG3+AwnyM900Hx8FFxpVcr8WRWM1V3gCEPo+Mu3IAgnV5Xz3BEudzvGleYr+73YRE199D6TF2UYjX1Jg8Tz/THJwxT7TAkUdSGKv2saeMZ0GdPhJ7sXffEx0jCAypYGZOvGD7tVFSBBDXV0A3KjTTBo67XT3gx3wZWZgCjuh/dUknscqcOXO3FMXv6xhYpH6bM=
 notifications:
   slack:
-    secure: 1jZ5Q0B5Zkd7KBFiEL72cJ7HVojvTKGFQ1PSKFMKGUJF4nJ7UM6PI8rurXkZWdsdV4jcE21+bqjRuT6DYBenlnz/XkAPSraI/sqcbvueTl+4WXaTPfh5gMUyKigcatoITDUFAWh84BWuEkCl5QFNGon40UENGt+k5ctIpaK0sD7efVG864fnwRWLuv77y5pySzbmfzHwX2w9LrmAHxOz2HPUViRXKX91Pu8QllQY0ZGGoq2DfBsmyGgClrqA1MmpyWqpooODG7XFGCnPHWK4Y8yIetr4w/+65WnJjc0r6i/4WXB20+DR8Amj94I3Pm/YfrL+9jJPIkLts0gMRrMVVhM2zEgHpl+YE4lVyTp7IAuK8rsPJzXj1ZSEopyvESkBQ6E8hxjF0VLs42xMsKqVLxFG096AT9X1KaxhHn3YaiqE+Ng30P1/6rDKd+64ydWCoRavHbcUnmnpVs581r3FiKvYRXk1imoSGWXBYCOPtLLUvpCE+4+e5oSQQN+L1R3yo8zvtiOE4rPNpKz0LiOkdRB6z6tpOBATS8BdIjzugRKSZ2gCCSTT2uRJQIcGDzZE+GR5LPKWA7d0InkjGQbc77q+oEu8UPykNftM6eCjiYX3Jx7GG2ttDoFkSfksfT8ndsdeNFmtGfhCK24vzrwGlhxYPjkQ6eIvOTsPGBitW1c=
+    secure: f3mUX/mLARDVUH/o1YS4tuO+oCIWkqMCkpdMvRgBAE4eUgfcr0Y6szEcSr08ml/EL52CU7h/4+xgYqm+1yhJBxmtSRySIigFOLZ/HdXItFyw8mLPE48U2khMGaAht1LP29VOKTttn2Qkom+sX5VguX1u15PVcUhRBFQEnOBFgX0lVvcThUcja7RrBZOPuPiUu0hRNI15qm92/kJujUzchdWTFZfOmrdi7p/5EtesSAdQ+E0VTjGOObN+9NaJu3XGg24fz8O6pRx+kXAT0kyLR6JygF1mcpG4WrxTwuuI8wjIoHoFLCv6x19IDGpSAqDJ2wjy+zOuOzjHjgratU1YJx2QYkndCIir1LdpjYRxDy3EyzvefrjTdVGpTG9zx/+406jlMT9lyg6Q9K7JtoZ0vx39JEiz76Z8TWWdWKM5qxtFghz+SCOdINVfoshnOjgs8/VFhoZoW/lyBayaDNXhIG8Mdu1OEtZYoWtAUtFDgLGQqU0b1DuPT8WELAJkKAMt8ieyowAze6Ktd/V4furX/cIxvpRZq5ojxmZFnma8c89kXWRl6Kghyc1j4ksqPm6btewbDim6RuBiKkufz8p4fKBo8QXK2kaFgHDO+7iHWG/Tg2hrkuC00pwJSpYBAW4Hc1IEGQxxuuJKm3zQ6mdQ8JBbupoY3iV4erEyh00bXvs=
 install:
-  - pip install GitPython
-  - export TRAVIS_COMMIT_MSG="$TRAVIS_REPO_SLUG - $(git log --format=%B --no-merges -n 1)"
+- pip install GitPython
+- export TRAVIS_COMMIT_MSG="$TRAVIS_REPO_SLUG - $(git log --format=%B --no-merges -n 1)"
 script:
-  - >
-    git clone https://github.com/xbmc-catchuptv-au/repo-devel.git .deploy && 
-    cd .deploy && 
-    ./manage_repo.py ../
-  - |
-    if [ -n "$TRAVIS_TAG" ]; then
-        cd ..
-        git clone https://github.com/xbmc-catchuptv-au/repo.git .deploy-prod && \
-        cd .deploy-prod && \
-        ./manage_repo.py ../ || travis_terminate 1
-    fi
+- |
+  git clone https://github.com/aussieaddons/repo-devel.git .deploy && \
+  cd .deploy && \
+  ./manage_repo.py ../
+- |
+  if [ -n "$TRAVIS_TAG" ]; then
+      cd ..
+      git clone https://github.com/aussieaddons/repo.git .deploy-prod && \
+      cd .deploy-prod && \
+      ./manage_repo.py ../ || travis_terminate 1
+  fi
 after_script:
-  - git config --global user.email 'aussieaddons@aussieaddons.com'
-  - git config --global user.name 'Aussie Add-ons Bot'
-  - cd ../.deploy
-  - git config credential.helper "store --file=.git/credentials"
-  - echo "https://${GH_TOKEN}:@github.com" > .git/credentials
-  - git add .
-  - git commit --allow-empty -m "$TRAVIS_COMMIT_MSG"
-  - git push
-  - |
-    if [ -n "$TRAVIS_TAG" ]; then
-        cd ../.deploy-prod
-        git config credential.helper "store --file=.git/credentials"
-        echo "https://${GH_TOKEN}:@github.com" > .git/credentials
-        git add . && \
-        git commit --allow-empty -m "Update $(basename `git -C ../ rev-parse --show-toplevel`) to $TRAVIS_TAG" && \
-        git push || travis_terminate 1
-    fi
+- git config --global user.email 'aussieaddons@aussieaddons.com'
+- git config --global user.name 'Aussie Add-ons Bot'
+- cd ../.deploy
+- git config credential.helper "store --file=.git/credentials"
+- echo "https://${GH_TOKEN}:@github.com" > .git/credentials
+- git add .
+- git commit --allow-empty -m "$TRAVIS_COMMIT_MSG"
+- git push
+- |
+  if [ -n "$TRAVIS_TAG" ]; then
+      cd ../.deploy-prod
+      git config credential.helper "store --file=.git/credentials"
+      echo "https://${GH_TOKEN}:@github.com" > .git/credentials
+      git add . && \
+      git commit --allow-empty -m "Update $(basename `git -C ../ rev-parse --show-toplevel`) to $TRAVIS_TAG" && \
+      git push || travis_terminate 1
+  fi
