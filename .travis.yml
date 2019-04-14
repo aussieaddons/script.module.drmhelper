@@ -7,35 +7,31 @@ notifications:
   slack:
     secure: f3mUX/mLARDVUH/o1YS4tuO+oCIWkqMCkpdMvRgBAE4eUgfcr0Y6szEcSr08ml/EL52CU7h/4+xgYqm+1yhJBxmtSRySIigFOLZ/HdXItFyw8mLPE48U2khMGaAht1LP29VOKTttn2Qkom+sX5VguX1u15PVcUhRBFQEnOBFgX0lVvcThUcja7RrBZOPuPiUu0hRNI15qm92/kJujUzchdWTFZfOmrdi7p/5EtesSAdQ+E0VTjGOObN+9NaJu3XGg24fz8O6pRx+kXAT0kyLR6JygF1mcpG4WrxTwuuI8wjIoHoFLCv6x19IDGpSAqDJ2wjy+zOuOzjHjgratU1YJx2QYkndCIir1LdpjYRxDy3EyzvefrjTdVGpTG9zx/+406jlMT9lyg6Q9K7JtoZ0vx39JEiz76Z8TWWdWKM5qxtFghz+SCOdINVfoshnOjgs8/VFhoZoW/lyBayaDNXhIG8Mdu1OEtZYoWtAUtFDgLGQqU0b1DuPT8WELAJkKAMt8ieyowAze6Ktd/V4furX/cIxvpRZq5ojxmZFnma8c89kXWRl6Kghyc1j4ksqPm6btewbDim6RuBiKkufz8p4fKBo8QXK2kaFgHDO+7iHWG/Tg2hrkuC00pwJSpYBAW4Hc1IEGQxxuuJKm3zQ6mdQ8JBbupoY3iV4erEyh00bXvs=
 install:
-- pip install GitPython
-- export TRAVIS_COMMIT_MSG="$TRAVIS_REPO_SLUG - $(git log --format=%B --no-merges -n 1)"
+  - pip install GitPython
+  - export TRAVIS_COMMIT_MSG="$TRAVIS_REPO_SLUG - $(git log --format=%B --no-merges -n 1)"
 script:
-- |
-  git clone https://github.com/aussieaddons/repo-devel.git .deploy && \
-  cd .deploy && \
-  ./manage_repo.py ../
-- |
-  if [ -n "$TRAVIS_TAG" ]; then
-      cd ..
-      git clone https://github.com/aussieaddons/repo.git .deploy-prod && \
-      cd .deploy-prod && \
-      ./manage_repo.py ../ || travis_terminate 1
-  fi
-after_script:
-- git config --global user.email 'aussieaddons@aussieaddons.com'
-- git config --global user.name 'Aussie Add-ons Bot'
-- cd ../.deploy
-- git config credential.helper "store --file=.git/credentials"
-- echo "https://${GH_TOKEN}:@github.com" > .git/credentials
-- git add .
-- git commit --allow-empty -m "$TRAVIS_COMMIT_MSG"
-- git push
-- |
-  if [ -n "$TRAVIS_TAG" ]; then
-      cd ../.deploy-prod
-      git config credential.helper "store --file=.git/credentials"
-      echo "https://${GH_TOKEN}:@github.com" > .git/credentials
-      git add . && \
-      git commit --allow-empty -m "Update $(basename `git -C ../ rev-parse --show-toplevel`) to $TRAVIS_TAG" && \
-      git push || travis_terminate 1
-  fi
+  - test "$TRAVIS_PULL_REQUEST" = "false" || travis_terminate 0
+  - test "$TRAVIS_BRANCH" = "$TRAVIS_TAG" -o "$TRAVIS_BRANCH" = "master" || travis_terminate 0
+  - git config --global user.email 'aussieaddons@aussieaddons.com'
+  - git config --global user.name 'Aussie Add-ons Bot'
+  - >
+    git clone https://github.com/aussieaddons/repo-devel.git $TRAVIS_BUILD_DIR/.deploy-devel &&
+    cd $TRAVIS_BUILD_DIR/.deploy-devel &&
+    ./manage_repo.py $TRAVIS_BUILD_DIR || travis_terminate 1
+  - git config credential.helper "store --file=.git/credentials"
+  - echo "https://${GH_TOKEN}:@github.com" > .git/credentials
+  - >
+    git add . &&
+    git commit --allow-empty -m "$TRAVIS_COMMIT_MSG" &&
+    git push || travis_terminate 1
+  - if [ -z "$TRAVIS_TAG" ]; then travis_terminate 0; fi
+  - >
+    git clone https://github.com/aussieaddons/repo.git $TRAVIS_BUILD_DIR/.deploy-prod &&
+    cd $TRAVIS_BUILD_DIR/.deploy-prod &&
+    ./manage_repo.py $TRAVIS_BUILD_DIR || travis_terminate 1
+  - git config credential.helper "store --file=.git/credentials"
+  - echo "https://${GH_TOKEN}:@github.com" > .git/credentials
+  - >
+    git add . &&
+    git commit --allow-empty -m "Update $(basename `git -C $TRAVIS_BUILD_DIR rev-parse --show-toplevel`) to $TRAVIS_TAG" &&
+    git push || travis_terminate 1
