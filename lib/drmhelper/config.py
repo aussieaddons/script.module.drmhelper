@@ -16,11 +16,18 @@ WIDEVINE_CDM_URL = {
 }
 
 UNARCHIVE_COMMAND = {
-    ('Linux', 'x86_64'): '(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})',
-    ('Linux','arm'): '(cd {1} && mv {0} {2} && chmod 755 {2})',
-    ('Linux', 'aarch64'): '(cd {1} && mv {0} {2} && chmod 755 {2})',
-    ('Darwin', 'x86_64'): '(cd {1} && unzip {0} {2} -d {1} && chmod 755 {1}/{2} && rm -f {0})',
+    ('Linux', 'x86_64'): '(cd {download_path} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
+    ('Linux','arm'): '(cd {download_path} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
+    ('Linux', 'aarch64'): '(cd {download_path} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
+    ('Darwin', 'x86_64'): '(cd {download_path} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
 }
+
+CDM_PATHS = [
+    "xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))",
+    "xbmc.translatePath('special://xbmcbinaddons/inputstream.adaptive')"
+]
+
+DEFAULT_CDM_PATH = 'special://home/cdm'
 
 SSD_WV_DICT = {
     'Android': None,
