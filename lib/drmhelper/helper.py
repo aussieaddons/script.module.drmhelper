@@ -354,7 +354,7 @@ class DRMHelper(object):
         cdm_fn = self._get_wvcdm_filename()
         cdm_paths = self._get_wvcdm_paths(addon)
         if not any(
-            os.path.isfile(os.path.join(p, cdm_fn)) for p in config.CDM_PATHS):
+            os.path.isfile(os.path.join(p, cdm_fn)) for p in cdm_paths):
             if utils.dialog_yn(
                 'Missing Widevine module',
                 '{0} not found in any expected location.'.format(cdm_fn),
