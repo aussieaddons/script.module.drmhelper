@@ -121,15 +121,6 @@ class DRMHelperTests(testtools.TestCase):
             is_supported = h._is_wv_drm_supported()
             self.assertFalse(is_supported)
 
-    def test_get_ssd_filename(self):
-        fake_system = 'Windows'
-        with mock.patch.object(helper.DRMHelper, '_get_system',
-                               return_value=fake_system):
-            ssd_filename = config.SSD_WV_DICT[fake_system]
-            h = helper.DRMHelper()
-            result = h._get_ssd_filename()
-            self.assertEqual(result, ssd_filename)
-
     def test_get_wvcdm_filename(self):
         fake_system = 'Linux'
         with mock.patch.object(helper.DRMHelper, '_get_system',

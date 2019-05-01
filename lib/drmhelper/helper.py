@@ -2,6 +2,7 @@ import json
 import os
 import platform
 import posixpath
+import tempfile
 import zipfile
 
 from distutils.version import LooseVersion
@@ -131,12 +132,15 @@ class DRMHelper(object):
             return True
         return False
 
-    def _get_ssd_filename(self):
-        return config.SSD_WV_DICT.get(self._get_system())
-
     def _get_wvcdm_filename(self):
         return config.WIDEVINE_CDM_DICT.get(self._get_system())
-
+    
+    def _get_wvcdm_paths(self, addon):
+        return [eval(x) for x in config.CDM_PATHS]
+    
+    def _get_home_folder(self):
+        return xbmc.translatePath('special://home/')
+    
     @classmethod
     def _get_latest_ia_version(cls):
         kodi_ver = utils.get_kodi_major_version()
@@ -346,35 +350,20 @@ class DRMHelper(object):
                     'binaries is required for DRM playback. We recommend '
                     'CoreELEC to support this.')
 
-        cdm_paths = [
-            xbmc.translatePath(addon.getSetting('DECRYPTERPATH')),
-            xbmc.translatePath('special://xbmc/addons/inputstream.adaptive'),
-            xbmc.translatePath('special://home/addons/inputstream.adaptive'),
-            xbmc.translatePath('special://xbmcbinaddons/inputstream.adaptive')
-        ]
+        
         cdm_fn = self._get_wvcdm_filename()
-
-        if not any(os.path.isfile(os.path.join(p, cdm_fn)) for p in cdm_paths):
+        cdm_paths = self._get_wvcdm_paths(addon)
+        if not any(
+            os.path.isfile(os.path.join(p, cdm_fn)) for p in cdm_paths):
             if utils.dialog_yn(
                 'Missing Widevine module',
                 '{0} not found in any expected location.'.format(cdm_fn),
                 'Do you want to attempt downloading the missing '
                     'Widevine CDM module to your system for DRM support?'):
-                self._get_wvcdm(cdm_paths[0])  # Use first path
+                self._get_wvcdm()
             else:
                 # TODO(andy): Ask to never attempt again
                 return False
-
-        # SSD
-        ssd_fn = self._get_ssd_filename()
-        if not any(os.path.isfile(os.path.join(p, ssd_fn)) for p in cdm_paths):
-            utils.dialog(
-                'Missing Widevine SSD module',
-                '{0} not found in any expected location.'.format(ssd_fn),
-                'ssd_wv module is supplied with Windows/Mac/LibreELEC, '
-                'and can be installed from most package managers in Linux '
-                'eg. "apt install kodi-inputstream-adaptive"')
-            return False
 
         return True
 
@@ -385,11 +374,11 @@ class DRMHelper(object):
                   ''.format(zpath, cdm_fn))
         with zipfile.ZipFile(zpath) as zf:
             with open(cdm_fn, 'wb') as f:
-                data = zf.read('widevinecdm.dll')
+                data = zf.read(self._get_wvcdm_filename())
                 f.write(data)
         os.remove(zpath)
 
-    def _get_wvcdm(self, cdm_path=None):
+    def _get_wvcdm(self):
         """Get the Widevine CDM library
 
         Win/Mac: download Chrome extension blob ~2MB and extract
@@ -397,22 +386,29 @@ class DRMHelper(object):
         Linux: download Chrome package ~50MB and extract libwidevinecdm.so
         Linux arm: download widevine package ~2MB from 3rd party host
         """
-        if not cdm_path:
-            addon = self.get_addon()
-            if not addon:
-                utils.dialog(
-                    'inputstream.adaptive not found'
-                    'inputstream.adaptive add-on must be installed '
-                    'before installing widevide_cdm module')
-                return
-
-            cdm_path = xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))
-
+        addon = self.get_addon()
+        if not addon:
+            utils.dialog(
+                'inputstream.adaptive not found'
+                'inputstream.adaptive add-on must be installed '
+                'before installing widevide_cdm module')
+            return
+        
         if self._is_android():
             utils.dialog('Not available',
                          'This module cannot be updated on Android')
             return
-
+        
+        cdm_paths = self._get_wvcdm_paths(addon)
+        
+        # See if we can write in folders, if not set DECRYPTERPATH to home/cdm
+        try:
+            tempfile.TemporaryFile(dir=cdm_paths[0])
+            cdm_path = cdm_paths[0]
+        except OSError:
+            cdm_path = xbmc.translatePath(config.DEFAULT_CDM_PATH)
+            addon.setSetting('DECRYPTERPATH', config.DEFAULT_CDM_PATH)
+            
         plat = self._get_platform()
         current_cdm_ver = requests.get(config.CMD_CURRENT_VERSION_URL).text
         url = config.WIDEVINE_CDM_URL[plat].format(current_cdm_ver)
@@ -426,7 +422,7 @@ class DRMHelper(object):
         if os.path.isfile(cdm_fn):
             utils.log('Removing existing widevine_cdm: {0}'.format(cdm_fn))
             os.remove(cdm_fn)
-        download_path = os.path.join(cdm_path, filename)
+        download_path = os.path.join(self._get_home_folder(), filename)
         if not self._progress_download(url, download_path, wv_cdm_fn):
             return
 
@@ -439,8 +435,10 @@ class DRMHelper(object):
             self._unzip_cdm(download_path, cdm_path)
         else:
             command = config.UNARCHIVE_COMMAND[plat].format(
-                quote(filename), quote(cdm_path),
-                config.WIDEVINE_CDM_DICT[self._get_system()])
+                filename=quote(filename),
+                cdm_path=quote(cdm_path),
+                wvcdm_filename=self._get_wvcdm_filename(),
+                download_path=quote(download_path))
             utils.log('executing command: {0}'.format(command))
             output = os.popen(command).read()
             utils.log('command output: {0}'.format(output))
