@@ -4,8 +4,6 @@ import platform
 import posixpath
 import tempfile
 import zipfile
-
-from distutils.version import LooseVersion
 from pipes import quote
 
 from drmhelper import config
@@ -14,8 +12,8 @@ from drmhelper import utils
 import requests
 
 import xbmc
-import xbmcaddon
-import xbmcgui
+import xbmcaddon  # noqa: I201
+import xbmcgui  # noqa: I201
 
 
 class DRMHelper(object):
@@ -134,10 +132,10 @@ class DRMHelper(object):
 
     def _get_wvcdm_filename(self):
         return config.WIDEVINE_CDM_DICT.get(self._get_system())
-    
+
     def _get_wvcdm_paths(self, addon):
         return [eval(x) for x in config.CDM_PATHS]
-    
+
     def _get_home_folder(self):
         return xbmc.translatePath('special://home/')
 
@@ -265,10 +263,10 @@ class DRMHelper(object):
                 'found or not enabled. This add-on is required to view DRM '
                 'protected content.')
             return False
-        
+
         utils.log('Found inputstream.adaptive version is {0}'.format(
             addon.getAddonInfo('version')))
-        
+
         # widevine built into android - not supported on 17 atm though
         if self._is_android():
             utils.log('Running on Android')
@@ -288,11 +286,10 @@ class DRMHelper(object):
                     'binaries is required for DRM playback. We recommend '
                     'CoreELEC to support this.')
 
-        
         cdm_fn = self._get_wvcdm_filename()
         cdm_paths = self._get_wvcdm_paths(addon)
         if not any(
-            os.path.isfile(os.path.join(p, cdm_fn)) for p in cdm_paths):
+                os.path.isfile(os.path.join(p, cdm_fn)) for p in cdm_paths):
             if utils.dialog_yn(
                 'Missing Widevine module',
                 '{0} not found in any expected location.'.format(cdm_fn),
@@ -331,14 +328,14 @@ class DRMHelper(object):
                 'inputstream.adaptive add-on must be installed '
                 'before installing widevide_cdm module')
             return
-        
+
         if self._is_android():
             utils.dialog('Not available',
                          'This module cannot be updated on Android')
             return
-        
+
         cdm_paths = self._get_wvcdm_paths(addon)
-        
+
         # See if we can write in folders, if not set DECRYPTERPATH to home/cdm
         try:
             tempfile.TemporaryFile(dir=cdm_paths[0])
@@ -346,7 +343,7 @@ class DRMHelper(object):
         except OSError:
             cdm_path = xbmc.translatePath(config.DEFAULT_CDM_PATH)
             addon.setSetting('DECRYPTERPATH', config.DEFAULT_CDM_PATH)
-            
+
         plat = self._get_platform()
         current_cdm_ver = requests.get(config.CMD_CURRENT_VERSION_URL).text
         url = config.WIDEVINE_CDM_URL[plat].format(current_cdm_ver)
