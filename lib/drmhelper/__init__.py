@@ -24,16 +24,6 @@ def get_ssd_wv(cdm_path=None):
     return dh._get_ssd_wv(cdm_path=cdm_path)
 
 
-def get_latest_ia_ver():
-    dh = helper.DRMHelper()
-    return dh._get_latest_ia_version()
-
-
-def is_ia_current(addon, latest=False):
-    dh = helper.DRMHelper()
-    return dh._is_ia_current(addon, latest=False)
-
-
 def get_ia_direct(update=False, drm=True):
     dh = helper.DRMHelper()
     return dh._get_ia_direct(update=update, drm=drm)

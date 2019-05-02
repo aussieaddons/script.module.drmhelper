@@ -140,41 +140,6 @@ class DRMHelper(object):
     
     def _get_home_folder(self):
         return xbmc.translatePath('special://home/')
-    
-    @classmethod
-    def _get_latest_ia_version(cls):
-        kodi_ver = utils.get_kodi_major_version()
-        ver = config.LATEST_IA_VERSION.get(kodi_ver)['ver']
-        utils.log('Latest inputstream.adaptive version is {0}'.format(ver))
-        return ver
-
-    @classmethod
-    def _get_minimum_ia_version(cls):
-        kodi_ver = utils.get_kodi_major_version()
-        return config.MIN_IA_VERSION.get(kodi_ver)
-
-    def _is_ia_current(self, addon, latest=False):
-        """Check if InputStream Adaptive is a current enough version
-
-        Check if inputstream.adaptive addon meets the minimum version
-        requirements.
-        latest -- checks if addon is equal to the latest available compiled
-        version
-        """
-        if not addon:
-            return False
-
-        ia_ver = addon.getAddonInfo('version')
-        utils.log('Found inputstream.adaptive version is {0}'.format(ia_ver))
-
-        if latest:
-            ver = self._get_latest_ia_version()['ver']
-        else:
-            ver = self._get_minimum_ia_version()
-
-        utils.log('Candidate inputstream.adaptive version is {0}'.format(ver))
-
-        return LooseVersion(ia_ver) >= LooseVersion(ver)
 
     @classmethod
     def _execute_json_rpc(cls, method, params):
@@ -252,13 +217,6 @@ class DRMHelper(object):
                 self._enable_addon()
             addon = self._get_addon()
 
-        if not self._is_ia_current(addon):
-            utils.dialog('inputstream.adaptive version lower than '
-                         'required', 'inputstream.adaptive version '
-                         'does not meet requirements. Please '
-                         'update your Kodi installation to a newer '
-                         'v18 build and try again')
-            return False
         return addon
 
     @classmethod
@@ -269,29 +227,6 @@ class DRMHelper(object):
                 'The minimum version of Kodi required for DASH/DRM '
                 'protected content is v18. Please upgrade in order to '
                 'use this feature.')
-            return False
-        return True
-
-    @classmethod
-    def _is_leia_build_ok(cls):
-        date = utils.get_kodi_build_date()
-        if not date:  # can't find build date, assume meets minimum
-            utils.log('Could not determine date of build, assuming date meets '
-                      'minimum. Build string is {0}'.format(
-                          utils.get_kodi_build()))
-            return True
-
-        leia_min_date = config.MIN_LEIA_BUILD[0]
-        min_date, min_commit = config.MIN_LEIA_BUILD
-
-        if int(date) < int(leia_min_date) and \
-                utils.get_kodi_major_version() >= 18:
-            utils.dialog(
-                'Kodi 18 build is too old',
-                'The minimum Kodi 18 build required for DASH/DRM support is '
-                'dated {0} with commit hash {1}. Your installation is dated '
-                '{2}. Please update your Kodi installation and try again.'
-                ''.format(min_date, min_commit, date))
             return False
         return True
 
@@ -330,7 +265,10 @@ class DRMHelper(object):
                 'found or not enabled. This add-on is required to view DRM '
                 'protected content.')
             return False
-
+        
+        utils.log('Found inputstream.adaptive version is {0}'.format(
+            addon.getAddonInfo('version')))
+        
         # widevine built into android - not supported on 17 atm though
         if self._is_android():
             utils.log('Running on Android')
