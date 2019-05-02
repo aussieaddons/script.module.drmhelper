@@ -16,10 +16,10 @@ WIDEVINE_CDM_URL = {
 }
 
 UNARCHIVE_COMMAND = {
-    ('Linux', 'x86_64'): '(cd {download_path} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
-    ('Linux','arm'): '(cd {download_path} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
-    ('Linux', 'aarch64'): '(cd {download_path} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
-    ('Darwin', 'x86_64'): '(cd {download_path} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
+    ('Linux', 'x86_64'): '(cd {download_folder} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
+    ('Linux','arm'): '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
+    ('Linux', 'aarch64'): '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
+    ('Darwin', 'x86_64'): '(cd {download_folder} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
 }
 
 CDM_PATHS = [

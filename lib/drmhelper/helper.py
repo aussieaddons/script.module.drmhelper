@@ -422,7 +422,8 @@ class DRMHelper(object):
         if os.path.isfile(cdm_fn):
             utils.log('Removing existing widevine_cdm: {0}'.format(cdm_fn))
             os.remove(cdm_fn)
-        download_path = os.path.join(self._get_home_folder(), filename)
+        home_folder = self._get_home_folder()
+        download_path = os.path.join(home_folder, filename)
         if not self._progress_download(url, download_path, wv_cdm_fn):
             return
 
@@ -438,7 +439,7 @@ class DRMHelper(object):
                 filename=quote(filename),
                 cdm_path=quote(cdm_path),
                 wvcdm_filename=self._get_wvcdm_filename(),
-                download_path=quote(download_path))
+                download_folder=quote(home_folder))
             utils.log('executing command: {0}'.format(command))
             output = os.popen(command).read()
             utils.log('command output: {0}'.format(output))
