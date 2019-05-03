@@ -2,4 +2,5 @@ mock
 testtools
 pytest
 requests
+responses
 git+https://github.com/romanvm/Kodistubs.git#egg=Kodistubs

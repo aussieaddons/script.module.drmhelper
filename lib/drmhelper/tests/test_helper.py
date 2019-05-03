@@ -1,9 +1,13 @@
+import json
+
 from drmhelper import config
 from drmhelper import helper
 
 import fakes
 
 import mock
+
+import responses
 
 import testtools
 
@@ -12,6 +16,11 @@ def get_xbmc_cond_visibility(cond):
     global HACK_PLATFORMS
     if cond in HACK_PLATFORMS:
         return True
+
+
+def get_trans_path(path, system):
+    index = fakes.TRANS_PATH_ARGS.index(path)
+    return fakes.TRANSLATED_PATHS.get(system)[index]
 
 
 class DRMHelperTests(testtools.TestCase):
@@ -129,6 +138,85 @@ class DRMHelperTests(testtools.TestCase):
             h = helper.DRMHelper()
             result = h._get_wvcdm_filename()
             self.assertEqual(result, wvcdm_filename)
+
+    def test_get_wvcdm_paths(self):
+        for system in fakes.SYSTEMS:
+            rv = fakes.TRANSLATED_PATHS.get(system.get('system'))
+            with mock.patch.object(
+                    helper.DRMHelper, '_get_wvcdm_paths', return_value=rv):
+                fake_addon = fakes.FakeAddon()
+                h = helper.DRMHelper()
+                cdm_paths = h._get_wvcdm_paths(fake_addon)
+                self.assertEqual(rv[0], cdm_paths[0])
+
+    @responses.activate
+    def test_get_wvcdm_current_ver(self):
+        responses.add(responses.GET, config.CMD_CURRENT_VERSION_URL,
+                      body='1.4.9.1088')
+        h = helper.DRMHelper()
+        result = h._get_wvcdm_current_ver()
+        self.assertEqual(result, '1.4.9.1088')
+
+    @mock.patch('tempfile.TemporaryFile')
+    def test_get_wv_cdm_path(self, temp_file):
+        for system in fakes.SYSTEMS:
+            rv = fakes.TRANSLATED_PATHS.get(system.get('system'))
+            with mock.patch.object(
+                    helper.DRMHelper, '_get_wvcdm_paths', return_value=rv):
+                fake_addon = fakes.FakeAddon()
+                h = helper.DRMHelper()
+                cdm_paths = h._get_wvcdm_paths(fake_addon)
+                result = h._get_wvcdm_path(fake_addon, cdm_paths)
+                temp_file.assert_called()
+                self.assertEqual(result, cdm_paths[0])
+
+    @responses.activate
+    @mock.patch.object(helper.DRMHelper,
+                       '_unzip_windows_cdm',
+                       return_value=True)
+    @mock.patch.object(helper.DRMHelper,
+                       '_execute_cdm_command',
+                       return_value=True)
+    @mock.patch.object(helper.DRMHelper,
+                       '_progress_download',
+                       return_value='True')
+    @mock.patch('xbmc.translatePath')
+    @mock.patch('tempfile.TemporaryFile')
+    @mock.patch('xbmc.executeJSONRPC')
+    @mock.patch('xbmcaddon.Addon')
+    @mock.patch('xbmcgui.DialogProgress')
+    @mock.patch('os.path.isfile')
+    @mock.patch('os.path.isdir')
+    def test_get_wvcdm(self, is_dir, is_file, dialog, mock_get_addon,
+                       mock_json_rpc, temp_file, translate_path,
+                       prog_download, cdm_command, unzip_win):
+        fake_addon = fakes.FakeAddon()
+        for s in fakes.SYSTEMS:
+            h = helper.DRMHelper()
+            if not h._is_wv_drm_supported():
+                continue
+            mock_get_addon.return_value = fake_addon
+            mock_json_rpc.return_value = json.dumps(fakes.IA_ENABLED)
+            responses.add(responses.GET, config.CMD_CURRENT_VERSION_URL,
+                          body='1.4.9.1088')
+            translate_path.side_effect = get_trans_path(
+                fakes.TRANS_PATH_ARGS[0], s.get('system'))
+            with mock.patch.object(
+                    helper.DRMHelper, '_get_wvcdm_paths',
+                    return_value=fakes.TRANSLATED_PATHS.get(s.get('system'))):
+                with mock.patch.object(helper.DRMHelper, '_get_system',
+                                       return_value=s.get('system')):
+                    with mock.patch.object(
+                            helper.DRMHelper, '_get_arch',
+                            return_value=s.get('expected_arch')):
+                        is_dir.return_value = True
+                        is_file.return_value = False
+                        result = h._get_wvcdm()
+                        temp_file.assert_called()
+                        dialog.assert_called()
+                        prog_download.assert_called()
+                        assert cdm_command.called or unzip_win.called
+                        self.assertEqual(result, True)
 
     @mock.patch('xbmc.executeJSONRPC')
     def test_execute_json_rpc(self, mock_exec_json_rpc):

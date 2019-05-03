@@ -302,7 +302,7 @@ class DRMHelper(object):
 
         return True
 
-    def _unzip_cdm(self, zpath, cdm_path):
+    def _unzip_windows_cdm(self, zpath, cdm_path):
         """Extract windows widevinecdm.dll from downloaded zip"""
         cdm_fn = posixpath.join(cdm_path, self._get_wvcdm_filename())
         utils.log('unzipping widevinecdm.dll from {0} to {1}'
@@ -312,6 +312,28 @@ class DRMHelper(object):
                 data = zf.read(self._get_wvcdm_filename())
                 f.write(data)
         os.remove(zpath)
+
+    def _execute_cdm_command(self, plat, filename, cdm_path, home_folder):
+        command = config.UNARCHIVE_COMMAND[plat].format(
+            filename=quote(filename),
+            cdm_path=quote(cdm_path),
+            wvcdm_filename=self._get_wvcdm_filename(),
+            download_folder=quote(home_folder))
+        utils.log('executing command: {0}'.format(command))
+        output = os.popen(command).read()
+        utils.log('command output: {0}'.format(output))
+
+    def _get_wvcdm_current_ver(self):
+        return requests.get(config.CMD_CURRENT_VERSION_URL).text
+
+    def _get_wvcdm_path(self, addon, cdm_paths):
+        try:
+            tempfile.TemporaryFile(dir=cdm_paths[0])
+            cdm_path = cdm_paths[0]
+        except OSError:
+            cdm_path = xbmc.translatePath(config.DEFAULT_CDM_PATH)
+            addon.setSetting('DECRYPTERPATH', config.DEFAULT_CDM_PATH)
+        return cdm_path
 
     def _get_wvcdm(self):
         """Get the Widevine CDM library
@@ -335,17 +357,9 @@ class DRMHelper(object):
             return
 
         cdm_paths = self._get_wvcdm_paths(addon)
-
-        # See if we can write in folders, if not set DECRYPTERPATH to home/cdm
-        try:
-            tempfile.TemporaryFile(dir=cdm_paths[0])
-            cdm_path = cdm_paths[0]
-        except OSError:
-            cdm_path = xbmc.translatePath(config.DEFAULT_CDM_PATH)
-            addon.setSetting('DECRYPTERPATH', config.DEFAULT_CDM_PATH)
-
+        cdm_path = self._get_wvcdm_path(addon, cdm_paths)
         plat = self._get_platform()
-        current_cdm_ver = requests.get(config.CMD_CURRENT_VERSION_URL).text
+        current_cdm_ver = self._get_wvcdm_current_ver()
         url = config.WIDEVINE_CDM_URL[plat].format(current_cdm_ver)
         filename = url.split('/')[-1]
         wv_cdm_fn = self._get_wvcdm_filename()
@@ -368,22 +382,17 @@ class DRMHelper(object):
         dp.update(0)
 
         if self._is_windows():
-            self._unzip_cdm(download_path, cdm_path)
+            self._unzip_windows_cdm(download_path, cdm_path)
         else:
-            command = config.UNARCHIVE_COMMAND[plat].format(
-                filename=quote(filename),
-                cdm_path=quote(cdm_path),
-                wvcdm_filename=self._get_wvcdm_filename(),
-                download_folder=quote(home_folder))
-            utils.log('executing command: {0}'.format(command))
-            output = os.popen(command).read()
-            utils.log('command output: {0}'.format(output))
+            self._execute_cdm_command(plat, filename, cdm_path, home_folder)
+
         dp.close()
         # TODO(andy): Test it was actually successful. Can be cancelled
         utils.dialog(
             'Success',
             '{0} successfully installed at {1}'.format(
                 wv_cdm_fn, os.path.join(cdm_path, wv_cdm_fn)))
+        return True
 
     def _progress_download(self, url, download_path, display_filename=None):
         """Progress download
