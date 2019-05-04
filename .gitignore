@@ -3,3 +3,4 @@
 *.zip
 .pytest_cache
 .tox
+/.idea

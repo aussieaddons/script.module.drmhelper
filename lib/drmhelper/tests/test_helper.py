@@ -1,9 +1,13 @@
+import json
+
 from drmhelper import config
 from drmhelper import helper
 
 import fakes
 
 import mock
+
+import responses
 
 import testtools
 
@@ -12,6 +16,11 @@ def get_xbmc_cond_visibility(cond):
     global HACK_PLATFORMS
     if cond in HACK_PLATFORMS:
         return True
+
+
+def get_trans_path(path, system):
+    index = fakes.TRANS_PATH_ARGS.index(path)
+    return fakes.TRANSLATED_PATHS.get(system)[index]
 
 
 class DRMHelperTests(testtools.TestCase):
@@ -130,55 +139,84 @@ class DRMHelperTests(testtools.TestCase):
             result = h._get_wvcdm_filename()
             self.assertEqual(result, wvcdm_filename)
 
-    @mock.patch('drmhelper.utils.get_kodi_major_version')
-    def test_get_latest_ia_version(self, mock_kodi_maj_ver):
-        test_kodi_ver = 18
-        mock_kodi_maj_ver.return_value = test_kodi_ver
+    def test_get_wvcdm_paths(self):
+        for system in fakes.SYSTEMS:
+            rv = fakes.TRANSLATED_PATHS.get(system.get('system'))
+            with mock.patch.object(
+                    helper.DRMHelper, '_get_wvcdm_paths', return_value=rv):
+                fake_addon = fakes.FakeAddon()
+                h = helper.DRMHelper()
+                cdm_paths = h._get_wvcdm_paths(fake_addon)
+                self.assertEqual(rv[0], cdm_paths[0])
+
+    @responses.activate
+    def test_get_wvcdm_current_ver(self):
+        responses.add(responses.GET, config.CMD_CURRENT_VERSION_URL,
+                      body='9.9.9.9999')
         h = helper.DRMHelper()
-        result = h._get_latest_ia_version()
-        expected = config.LATEST_IA_VERSION[test_kodi_ver]['ver']
-        self.assertEqual(result, expected)
+        result = h._get_wvcdm_current_ver()
+        self.assertEqual(result, '9.9.9.9999')
 
-    @mock.patch('drmhelper.utils.get_kodi_major_version')
-    def test_get_minimum_ia_version(self, mock_kodi_maj_ver):
-        test_kodi_ver = 18
-        mock_kodi_maj_ver.return_value = test_kodi_ver
-        h = helper.DRMHelper()
-        result = h._get_minimum_ia_version()
-        expected = config.MIN_IA_VERSION[test_kodi_ver]
-        self.assertEqual(result, expected)
+    @mock.patch('tempfile.TemporaryFile')
+    def test_get_wv_cdm_path(self, temp_file):
+        for system in fakes.SYSTEMS:
+            rv = fakes.TRANSLATED_PATHS.get(system.get('system'))
+            with mock.patch.object(
+                    helper.DRMHelper, '_get_wvcdm_paths', return_value=rv):
+                fake_addon = fakes.FakeAddon()
+                h = helper.DRMHelper()
+                cdm_paths = h._get_wvcdm_paths(fake_addon)
+                result = h._get_wvcdm_path(fake_addon, cdm_paths)
+                temp_file.assert_called()
+                self.assertEqual(result, cdm_paths[0])
 
-    def test_is_ia_current(self):
-        with mock.patch.object(helper.DRMHelper, '_get_minimum_ia_version',
-                               return_value='0.0.1'):
-            fake_addon = fakes.FakeAddon()
+    @responses.activate
+    @mock.patch.object(helper.DRMHelper,
+                       '_unzip_windows_cdm',
+                       return_value=True)
+    @mock.patch.object(helper.DRMHelper,
+                       '_execute_cdm_command',
+                       return_value=True)
+    @mock.patch.object(helper.DRMHelper,
+                       '_progress_download',
+                       return_value='True')
+    @mock.patch('xbmc.translatePath')
+    @mock.patch('tempfile.TemporaryFile')
+    @mock.patch('xbmc.executeJSONRPC')
+    @mock.patch('xbmcaddon.Addon')
+    @mock.patch('xbmcgui.DialogProgress')
+    @mock.patch('os.path.isfile')
+    @mock.patch('os.path.isdir')
+    def test_get_wvcdm(self, is_dir, is_file, dialog, mock_get_addon,
+                       mock_json_rpc, temp_file, translate_path,
+                       prog_download, cdm_command, unzip_win):
+        fake_addon = fakes.FakeAddon()
+        for s in fakes.SYSTEMS:
             h = helper.DRMHelper()
-            result = h._is_ia_current(fake_addon)
-            self.assertTrue(result)
-
-    def test_is_ia_current_negative(self):
-        with mock.patch.object(helper.DRMHelper, '_get_minimum_ia_version',
-                               return_value='0.0.2'):
-            fake_addon = fakes.FakeAddon()
-            h = helper.DRMHelper()
-            result = h._is_ia_current(fake_addon)
-            self.assertFalse(result)
-
-    def test_is_ia_current_latest(self):
-        with mock.patch.object(helper.DRMHelper, '_get_latest_ia_version',
-                               return_value={'ver': '0.0.1'}):
-            fake_addon = fakes.FakeAddon()
-            h = helper.DRMHelper()
-            result = h._is_ia_current(fake_addon, latest=True)
-            self.assertTrue(result)
-
-    def test_is_ia_current_latest_negative(self):
-        with mock.patch.object(helper.DRMHelper, '_get_latest_ia_version',
-                               return_value={'ver': '0.0.2'}):
-            fake_addon = fakes.FakeAddon()
-            h = helper.DRMHelper()
-            result = h._is_ia_current(fake_addon, latest=True)
-            self.assertFalse(result)
+            if not h._is_wv_drm_supported():
+                continue
+            mock_get_addon.return_value = fake_addon
+            mock_json_rpc.return_value = json.dumps(fakes.IA_ENABLED)
+            responses.add(responses.GET, config.CMD_CURRENT_VERSION_URL,
+                          body='9.9.9.9999')
+            translate_path.side_effect = get_trans_path(
+                fakes.TRANS_PATH_ARGS[0], s.get('system'))
+            with mock.patch.object(
+                    helper.DRMHelper, '_get_wvcdm_paths',
+                    return_value=fakes.TRANSLATED_PATHS.get(s.get('system'))):
+                with mock.patch.object(helper.DRMHelper, '_get_system',
+                                       return_value=s.get('system')):
+                    with mock.patch.object(
+                            helper.DRMHelper, '_get_arch',
+                            return_value=s.get('expected_arch')):
+                        is_dir.return_value = True
+                        is_file.return_value = False
+                        result = h._get_wvcdm()
+                        temp_file.assert_called()
+                        dialog.assert_called()
+                        prog_download.assert_called()
+                        assert cdm_command.called or unzip_win.called
+                        self.assertEqual(result, True)
 
     @mock.patch('xbmc.executeJSONRPC')
     def test_execute_json_rpc(self, mock_exec_json_rpc):
@@ -237,15 +275,15 @@ class DRMHelperTests(testtools.TestCase):
                 result = h.get_addon()
                 self.assertFalse(result)
 
-    def test_get_addon_install_ok(self):
+    @mock.patch('xbmcaddon.Addon')
+    def test_get_addon_install_ok(self, mock_get_addon):
         rpc_success = {"result": {"addon": {"enabled": True}}}
         fake_addon = fakes.FakeAddon()
+        mock_get_addon.return_value = fake_addon
         with mock.patch.object(helper.DRMHelper, '_execute_json_rpc',
                                return_value=rpc_success):
             with mock.patch.object(helper.DRMHelper, '_install_addon',
                                    return_value=fake_addon):
-                with mock.patch.object(helper.DRMHelper, '_is_ia_current',
-                                       return_value=True):
-                    h = helper.DRMHelper()
-                    result = h.get_addon()
-                    #self.assertEqual(result, fake_addon)
+                h = helper.DRMHelper()
+                result = h.get_addon()
+                self.assertEqual(result, fake_addon)

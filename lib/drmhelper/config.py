@@ -75,7 +75,6 @@ WINDOWS_BITNESS = {
     '64bit': 'x86_64'
 }
 
-
 KODI_NAME = {
     12: 'Frodo',
     13: 'Gotham',
@@ -83,17 +82,6 @@ KODI_NAME = {
     15: 'Isengard',
     16: 'Jarvis',
     17: 'Krypton',
-    18: 'Leia'
+    18: 'Leia',
+    19: 'Matrix'
 }
-
-MIN_IA_VERSION = {
-    17: '2.0.7',
-    18: '2.0.10'
-}
-
-LATEST_IA_VERSION = {
-    17: {'ver': '2.0.19', 'commit': '9af2121'},
-    18: {'ver': '2.0.10', 'commit': '0c7e975'}
-}
-
-MIN_LEIA_BUILD = ('20170818', 'e6b0c83')

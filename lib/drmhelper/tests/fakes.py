@@ -152,3 +152,17 @@ IA_ENABLED = {
         }
     }
 }
+
+TRANS_PATH_ARGS = [
+    "addon.getSetting('DECRYPTERPATH')",
+    'special://xbmcbinaddons/inputstream.adaptive',
+    'special://home/'
+]
+
+TRANSLATED_PATHS = {
+    'Linux': ['/storage/.kodi/cdm',
+              '/storage/.kodi/addons/inputstream.adaptive'],
+    'Windows': ['C:/Users/user/AppData/Roaming/Kodi/cdm',
+                'C:/Program Files (x86)/Kodi/addons/inputstream.adaptive'],
+    'Darwin': ['/Users/User/Library/Application Support/Kodi/cdm/']
+}
