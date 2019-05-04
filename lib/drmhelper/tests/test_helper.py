@@ -152,10 +152,10 @@ class DRMHelperTests(testtools.TestCase):
     @responses.activate
     def test_get_wvcdm_current_ver(self):
         responses.add(responses.GET, config.CMD_CURRENT_VERSION_URL,
-                      body='1.4.9.1088')
+                      body='9.9.9.9999')
         h = helper.DRMHelper()
         result = h._get_wvcdm_current_ver()
-        self.assertEqual(result, '1.4.9.1088')
+        self.assertEqual(result, '9.9.9.9999')
 
     @mock.patch('tempfile.TemporaryFile')
     def test_get_wv_cdm_path(self, temp_file):
@@ -198,7 +198,7 @@ class DRMHelperTests(testtools.TestCase):
             mock_get_addon.return_value = fake_addon
             mock_json_rpc.return_value = json.dumps(fakes.IA_ENABLED)
             responses.add(responses.GET, config.CMD_CURRENT_VERSION_URL,
-                          body='1.4.9.1088')
+                          body='9.9.9.9999')
             translate_path.side_effect = get_trans_path(
                 fakes.TRANS_PATH_ARGS[0], s.get('system'))
             with mock.patch.object(
