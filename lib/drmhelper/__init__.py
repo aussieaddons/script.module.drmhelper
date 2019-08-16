@@ -3,6 +3,8 @@ This contains the legacy entrypoints for DRM Helper
 """
 from drmhelper import helper
 
+import xbmcgui
+
 
 def check_inputstream(drm=True):
     dh = helper.DRMHelper()
@@ -16,12 +18,11 @@ def get_addon(drm=True):
 
 def get_widevinecdm(cdm_path=None):
     dh = helper.DRMHelper()
-    return dh._get_wvcdm(cdm_path=cdm_path)
+    return dh._get_wvcdm()
 
 
 def get_ssd_wv(cdm_path=None):
-    dh = helper.DRMHelper()
-    return dh._get_ssd_wv(cdm_path=cdm_path)
+    xbmcgui.Dialog().ok('No longer needed/supported')
 
 
 def get_ia_direct(update=False, drm=True):
