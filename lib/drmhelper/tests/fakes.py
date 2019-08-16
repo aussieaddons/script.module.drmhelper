@@ -160,9 +160,9 @@ TRANS_PATH_ARGS = [
 ]
 
 TRANSLATED_PATHS = {
-    'Linux': ['/storage/.kodi/cdm',
-              '/storage/.kodi/addons/inputstream.adaptive'],
-    'Windows': ['C:/Users/user/AppData/Roaming/Kodi/cdm',
-                'C:/Program Files (x86)/Kodi/addons/inputstream.adaptive'],
+    'Linux': ['/storage/.kodi/addons/inputstream.adaptive',
+              '/storage/.kodi/cdm'],
+    'Windows': ['C:/Program Files (x86)/Kodi/addons/inputstream.adaptive',
+                'C:/Users/user/AppData/Roaming/Kodi/cdm'],
     'Darwin': ['/Users/User/Library/Application Support/Kodi/cdm/']
 }
