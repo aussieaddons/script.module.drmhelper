@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import platform
@@ -5,6 +6,8 @@ import posixpath
 import tempfile
 import zipfile
 from pipes import quote
+
+import future.moves.builtins as builtins
 
 from drmhelper import config
 from drmhelper import utils
@@ -18,6 +21,10 @@ import xbmcgui  # noqa: I201
 
 class DRMHelper(object):
     """DRM Helper"""
+    def __init__(self):
+        self.addon = None
+        self.wvcdm_download_base_url = None
+        self.wvcdm_download_data = None
 
     def _get_system(self):
         """Get the system platform information"""
@@ -193,8 +200,6 @@ class DRMHelper(object):
 
         Check if inputstream.adaptive is installed, attempt to install if not.
         """
-        addon = None
-
         req = {
             'method': 'Addons.GetAddonDetails',
             'params': {'addonid': 'inputstream.adaptive',
@@ -206,16 +211,16 @@ class DRMHelper(object):
 
         if 'error' in result:  # not installed
             utils.log('inputstream.adaptive not currently installed')
-            addon = self._install_addon()
-            if not addon:
+            self.addon = self._install_addon()
+            if not self.addon:
                 return False  # error installing
         else:  # installed but not enabled. let's enable it.
             if result['result']['addon'].get('enabled') is False:
                 utils.log('inputstream.adaptive not enabled, enabling...')
                 self._enable_addon()
-            addon = self._get_addon()
+            self.addon = self._get_addon()
 
-        return addon
+        return self.addon
 
     @classmethod
     def _is_kodi_supported_version(cls):
@@ -227,6 +232,31 @@ class DRMHelper(object):
                 'use this feature.')
             return False
         return True
+
+    def _lookup_mjh_plat(self):
+        plat = '{0}{1}'.format(self._get_system(), self._get_arch())
+        return config.MJH_LOOKUP.get(plat)
+
+    def _set_wvcdm_current_ver_data(self):
+        data = requests.get(config.CDM_CURRENT_VERSION_URL).text
+        json_data = json.loads(data).get('widevine')
+        self.wvcdm_download_base_url = json_data.get('base_url')
+        plat = self._lookup_mjh_plat()
+        self.wvcdm_download_data = json_data['platforms'].get(plat)
+
+
+    def _check_wv_cdm_version_current(self):
+        self._set_wvcdm_current_ver_data()
+        cdm_fn = self._get_wvcdm_filename()
+        cdm_paths = self._get_wvcdm_paths(self.addon)
+        for p in cdm_paths:
+            path = os.path.join(p, cdm_fn)
+            if os.path.isfile(path):
+                md5 = hashlib.md5(builtins.open(path, 'rb').read()).hexdigest()
+                if md5 == self.wvcdm_download_data.get('md5'):
+                    return self.wvcdm_download_data.get('src')
+                else:
+                    return False
 
     def check_inputstream(self, drm=True):
         """Check InputStream Adaptive is installed and ready
@@ -255,8 +285,8 @@ class DRMHelper(object):
                 'DRM encrypted content. Please upgrade to Kodi v18.')
             return False
 
-        addon = self.get_addon()
-        if not addon:
+        self.addon = self.get_addon()
+        if not self.addon:
             utils.dialog(
                 'Missing inputstream.adaptive add-on',
                 'inputstream.adaptive VideoPlayer InputStream add-on not '
@@ -265,7 +295,7 @@ class DRMHelper(object):
             return False
 
         utils.log('Found inputstream.adaptive version is {0}'.format(
-            addon.getAddonInfo('version')))
+            self.addon.getAddonInfo('version')))
 
         # widevine built into android - not supported on 17 atm though
         if self._is_android():
@@ -287,14 +317,14 @@ class DRMHelper(object):
                     'CoreELEC to support this.')
 
         cdm_fn = self._get_wvcdm_filename()
-        cdm_paths = self._get_wvcdm_paths(addon)
-        if not any(
-                os.path.isfile(os.path.join(p, cdm_fn)) for p in cdm_paths):
+        if not self._check_wv_cdm_version_current():
             if utils.dialog_yn(
-                'Missing Widevine module',
-                '{0} not found in any expected location.'.format(cdm_fn),
-                'Do you want to attempt downloading the missing '
-                    'Widevine CDM module to your system for DRM support?'):
+                'Widevine module ({0}) missing or out of date'.format(cdm_fn),
+                ('The Widevine CDM module ({0}) is out of date '
+                 'or not found in any expected location. '
+                 'Do you want to attempt to download/update the '
+                 'Widevine CDM module to your system for '
+                 'DRM support?'.format(cdm_fn))):
                 self._get_wvcdm()
             else:
                 # TODO(andy): Ask to never attempt again
@@ -302,16 +332,12 @@ class DRMHelper(object):
 
         return True
 
-    def _unzip_windows_cdm(self, zpath, cdm_path):
-        """Extract windows widevinecdm.dll from downloaded zip"""
+    def _rename_windows_cdm(self, download_path, cdm_path):
+        """Move windows widevinecdm.dll from download"""
         cdm_fn = posixpath.join(cdm_path, self._get_wvcdm_filename())
-        utils.log('unzipping widevinecdm.dll from {0} to {1}'
-                  ''.format(zpath, cdm_fn))
-        with zipfile.ZipFile(zpath) as zf:
-            with open(cdm_fn, 'wb') as f:
-                data = zf.read(self._get_wvcdm_filename())
-                f.write(data)
-        os.remove(zpath)
+        utils.log('moving widevinecdm.dll from {0} to {1}'
+                  ''.format(download_path, cdm_fn))
+        os.rename(download_path, cdm_fn)
 
     def _execute_cdm_command(self, plat, filename, cdm_path, home_folder):
         command = config.UNARCHIVE_COMMAND[plat].format(
@@ -322,9 +348,6 @@ class DRMHelper(object):
         utils.log('executing command: {0}'.format(command))
         output = os.popen(command).read()
         utils.log('command output: {0}'.format(output))
-
-    def _get_wvcdm_current_ver(self):
-        return requests.get(config.CMD_CURRENT_VERSION_URL).text
 
     def _get_wvcdm_path(self, addon, cdm_paths):
         try:
@@ -356,11 +379,20 @@ class DRMHelper(object):
                          'This module cannot be updated on Android')
             return
 
+        if not self._is_wv_drm_supported():
+            utils.dialog(
+                'Platform not supported',
+                '{0} not supported for DRM playback. '
+                'For more information, see our DRM FAQ at {1}'
+                ''.format(self.get_platform_name(), config.DRM_INFO))
+            return
+
         cdm_paths = self._get_wvcdm_paths(addon)
         cdm_path = self._get_wvcdm_path(addon, cdm_paths)
         plat = self._get_platform()
-        current_cdm_ver = self._get_wvcdm_current_ver()
-        url = config.WIDEVINE_CDM_URL[plat].format(current_cdm_ver)
+        self._set_wvcdm_current_ver_data()
+
+        url = os.path.join(self.wvcdm_download_base_url, self.wvcdm_download_data.get('src'))
         filename = url.split('/')[-1]
         wv_cdm_fn = self._get_wvcdm_filename()
 
@@ -382,7 +414,7 @@ class DRMHelper(object):
         dp.update(0)
 
         if self._is_windows():
-            self._unzip_windows_cdm(download_path, cdm_path)
+            self._rename_windows_cdm(download_path, cdm_path)
         else:
             self._execute_cdm_command(plat, filename, cdm_path, home_folder)
 
@@ -419,7 +451,7 @@ class DRMHelper(object):
         dp.create("Downloading {0}".format(display_filename),
                   "Downloading File", url)
 
-        with open(download_path, 'wb') as f:
+        with builtins.open(download_path, 'wb') as f:
             chunk_size = 1024
             downloaded = 0
             for chunk in res.iter_content(chunk_size=chunk_size):

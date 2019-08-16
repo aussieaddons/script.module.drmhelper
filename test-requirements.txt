@@ -3,4 +3,5 @@ testtools
 pytest
 requests
 responses
+future
 git+https://github.com/romanvm/Kodistubs.git#egg=Kodistubs
