@@ -250,7 +250,7 @@ class DRMHelperTests(testtools.TestCase):
     @responses.activate
     @mock.patch.object(helper.DRMHelper, '_get_kodi_arch')
     @mock.patch.object(helper.DRMHelper,
-                       '_unzip_windows_cdm',
+                       '_rename_windows_cdm',
                        return_value=True)
     @mock.patch.object(helper.DRMHelper,
                        '_execute_cdm_command',
@@ -267,7 +267,7 @@ class DRMHelperTests(testtools.TestCase):
     @mock.patch('os.path.isdir')
     def test_get_wvcdm(self, is_dir, is_file, dialog, mock_get_addon,
                        mock_json_rpc, temp_file, translate_path,
-                       prog_download, cdm_command, unzip_win, mock_kodi_arch):
+                       prog_download, cdm_command, rename_win, mock_kodi_arch):
         fake_addon = fakes.FakeAddon()
         for s in fakes.SYSTEMS:
             h = helper.DRMHelper()
@@ -299,11 +299,11 @@ class DRMHelperTests(testtools.TestCase):
                             dialog.assert_called_once()
                             dialog.reset_mock()
                             prog_download.assert_called_once()
-                            #print prog_download.call_args
+                            #print(prog_download.call_args)
                             prog_download.reset_mock()
-                            assert cdm_command.called or unzip_win.called
+                            assert cdm_command.called or rename_win.called
                             cdm_command.reset_mock()
-                            unzip_win.reset_mock()
+                            rename_win.reset_mock()
 
                         self.assertEqual(expected, observed)
 

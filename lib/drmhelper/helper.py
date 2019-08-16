@@ -200,8 +200,6 @@ class DRMHelper(object):
 
         Check if inputstream.adaptive is installed, attempt to install if not.
         """
-        if self.addon:
-            print 'already addon'
         req = {
             'method': 'Addons.GetAddonDetails',
             'params': {'addonid': 'inputstream.adaptive',
@@ -240,10 +238,11 @@ class DRMHelper(object):
         return config.MJH_LOOKUP.get(plat)
 
     def _set_wvcdm_current_ver_data(self):
-        data = json.loads(requests.get(config.CDM_CURRENT_VERSION_URL).text).get('widevine')
-        self.wvcdm_download_base_url = data.get('base_url')
+        data = requests.get(config.CDM_CURRENT_VERSION_URL).text
+        json_data = json.loads(data).get('widevine')
+        self.wvcdm_download_base_url = json_data.get('base_url')
         plat = self._lookup_mjh_plat()
-        self.wvcdm_download_data = data['platforms'].get(plat)
+        self.wvcdm_download_data = json_data['platforms'].get(plat)
 
 
     def _check_wv_cdm_version_current(self):
@@ -333,16 +332,12 @@ class DRMHelper(object):
 
         return True
 
-    def _unzip_windows_cdm(self, zpath, cdm_path):
-        """Extract windows widevinecdm.dll from downloaded zip"""
+    def _rename_windows_cdm(self, download_path, cdm_path):
+        """Move windows widevinecdm.dll from download"""
         cdm_fn = posixpath.join(cdm_path, self._get_wvcdm_filename())
-        utils.log('unzipping widevinecdm.dll from {0} to {1}'
-                  ''.format(zpath, cdm_fn))
-        with zipfile.ZipFile(zpath) as zf:
-            with builtins.open(cdm_fn, 'wb') as f:
-                data = zf.read(self._get_wvcdm_filename())
-                f.write(data)
-        os.remove(zpath)
+        utils.log('moving widevinecdm.dll from {0} to {1}'
+                  ''.format(download_path, cdm_fn))
+        os.rename(download_path, cdm_fn)
 
     def _execute_cdm_command(self, plat, filename, cdm_path, home_folder):
         command = config.UNARCHIVE_COMMAND[plat].format(
@@ -419,10 +414,7 @@ class DRMHelper(object):
         dp.update(0)
 
         if self._is_windows():
-            cdm_fn = posixpath.join(cdm_path, self._get_wvcdm_filename())
-            utils.log('moving widevinecdm.dll from {0} to {1}'
-                      ''.format(download_path, cdm_fn))
-            os.rename(download_path, cdm_fn)
+            self._rename_windows_cdm(download_path, cdm_path)
         else:
             self._execute_cdm_command(plat, filename, cdm_path, home_folder)
 
