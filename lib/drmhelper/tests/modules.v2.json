@@ -1,0 +1,13 @@
+{
+    "widevine" : {
+        "base_url" : "https://k.mjh.nz/.decryptmodules/widevine/",
+        "platforms": {
+            "Linuxarmv7"   : {"src": "4.10.1440.18-linux-armv7.so", "dst": "libwidevinecdm.so",    "md5": "41c94b9ffa735fe4f412b7e9283dd2ff"},
+            "Linuxi386"    : {"src": "4.10.1440.18-linux-ia32.so",  "dst": "libwidevinecdm.so",    "md5": "60ae5514a0dd6595993dd7bdd50d1dad"},
+            "Linuxx86_64"  : {"src": "4.10.1440.18-linux-x64.so",   "dst": "libwidevinecdm.so",    "md5": "995a6544b32b7d06ac6159aad878a8a0"},
+            "Darwinx86_64" : {"src": "4.10.1440.18-mac-x64.dylib",  "dst": "libwidevinecdm.dylib", "md5": "68d048c7277e153e6d884583183c52d1"},
+            "Windows32bit" : {"src": "4.10.1440.18-win-ia32.dll",   "dst": "widevinecdm.dll",      "md5": "f634756cf6a4be877fc71120738ac7f3"},
+            "Windows64bit" : {"src": "4.10.1440.18-win-x64.dll",    "dst": "widevinecdm.dll",      "md5": "5dc1fbe9b3b1e923615dfc249be3ee7b"}
+        }
+    }
+}

@@ -4,7 +4,7 @@ DRM_INFO = 'http://aussieaddons.com/drm'
 
 REPO_BASE = 'https://github.com/aussieaddons/repo-binary/raw/master/'
 
-CMD_CURRENT_VERSION_URL = 'https://dl.google.com/widevine-cdm/current.txt'
+CDM_CURRENT_VERSION_URL = 'http://k.mjh.nz/.decryptmodules/modules.v2.json'
 
 WIDEVINE_CDM_URL = {
     ('Linux', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-linux-x64.zip',
@@ -58,11 +58,22 @@ ARCH_DICT = {
     'i686': 'x86'
 }
 
+MJH_LOOKUP = {
+    'Windowsx86_64': 'Windows64bit',
+    'Windowsx86': 'Windows32bit',
+    'Darwinx86_64': 'Darwinx86_64',
+    'Linuxx86_64': 'Linuxx86_64',
+    'Linuxx86': 'Linuxi386',
+    'Linuxarm': 'Linuxarmv7',
+    'Linuxaarch64': 'Linuxarmv7'
+}
+
 SUPPORTED_WV_DRM_PLATFORMS = [
     ('Windows', 'x86_64'),
     ('Windows', 'x86'),
     ('Darwin', 'x86_64'),
     ('Linux', 'x86_64'),
+    ('Linux', 'x86'),
     ('Linux', 'arm'),
     ('Linux', 'aarch64'),
     ('Android', 'x86'),

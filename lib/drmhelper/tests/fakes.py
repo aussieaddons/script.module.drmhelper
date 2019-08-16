@@ -17,6 +17,15 @@ class FakeAddon(object):
         return getattr(self, key)
 
 
+class FakeMd5(object):
+    def __init__(self, *args, **kwagrs):
+        self.digest_value = None
+        pass
+
+    def hexdigest(self):
+        return self.digest_value
+
+
 # Some systems we support
 SYSTEMS = [
     # Linux
@@ -25,7 +34,7 @@ SYSTEMS = [
         'platforms': ['System.Platform.Linux'],
         'machine': 'x86_64',
         'expected_system': 'Linux',
-        'expected_arch': 'x64',
+        'expected_arch': 'x86_64',
     },
     # Generic Windows
     {
@@ -42,7 +51,7 @@ SYSTEMS = [
         'platforms': ['System.Platform.OSX'],
         'machine': 'x86_64',
         'expected_system': 'Darwin',
-        'expected_arch': 'x64',
+        'expected_arch': 'x86_64',
     },
     # Raspberry Pi
     {
@@ -70,7 +79,7 @@ SYSTEMS = [
         'machine': '',
         'arch': '64bit',
         'expected_system': 'UWP',
-        'expected_arch': 'x64',
+        'expected_arch': 'x86_64',
     },
     # Xbox One
     {
@@ -80,7 +89,7 @@ SYSTEMS = [
         'machine': '',
         'arch': '64bit',
         'expected_system': 'UWP',
-        'expected_arch': 'x64',
+        'expected_arch': 'x86_64',
     },
 ]
 
