@@ -127,11 +127,16 @@ class DRMHelperTests(testtools.TestCase):
                 self.assertEqual(plat, expected_plat)
 
     def test_is_wv_drm_supported(self):
-        with mock.patch.object(helper.DRMHelper, '_get_platform',
-                               return_value=('Linux', 'x86_64')):
-            h = helper.DRMHelper()
-            is_supported = h._is_wv_drm_supported()
-            self.assertTrue(is_supported)
+        for s in fakes.SYSTEMS:
+            plat = (s.get('expected_system'), s.get('expected_arch'))
+            system = s.get('expected_system')
+            arch = s.get('expected_arch')
+            with mock.patch.object(helper.DRMHelper, '_get_platform',
+                                   return_value=plat):
+                h = helper.DRMHelper()
+                observed = h._is_wv_drm_supported()
+                expected = s.get('drm_supported')
+                self.assertEqual(expected, observed)
 
     def test_is_wv_drm_not_supported(self):
         with mock.patch.object(helper.DRMHelper, '_get_platform',

@@ -64,7 +64,7 @@ MJH_LOOKUP = {
     'Darwinx86_64': 'Darwinx86_64',
     'Linuxx86_64': 'Linuxx86_64',
     'Linuxx86': 'Linuxi386',
-    'Linuxarm': 'Linuxarmv7',
+    'Linuxarmv7': 'Linuxarmv7',
     'Linuxaarch64': 'Linuxarmv7'
 }
 
@@ -74,7 +74,7 @@ SUPPORTED_WV_DRM_PLATFORMS = [
     ('Darwin', 'x86_64'),
     ('Linux', 'x86_64'),
     ('Linux', 'x86'),
-    ('Linux', 'arm'),
+    ('Linux', 'armv7'),
     ('Linux', 'aarch64'),
     ('Android', 'x86'),
     ('Android', 'arm'),

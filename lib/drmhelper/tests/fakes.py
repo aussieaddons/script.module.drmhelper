@@ -35,6 +35,7 @@ SYSTEMS = [
         'machine': 'x86_64',
         'expected_system': 'Linux',
         'expected_arch': 'x86_64',
+        'drm_supported': True
     },
     # Generic Windows
     {
@@ -44,6 +45,7 @@ SYSTEMS = [
         'arch': '32bit',
         'expected_system': 'Windows',
         'expected_arch': 'x86',
+        'drm_supported': True
     },
     # Generic Mac OS X
     {
@@ -52,6 +54,7 @@ SYSTEMS = [
         'machine': 'x86_64',
         'expected_system': 'Darwin',
         'expected_arch': 'x86_64',
+        'drm_supported': True
     },
     # Raspberry Pi
     {
@@ -60,7 +63,8 @@ SYSTEMS = [
                       'System.Platform.Linux'],
         'machine': 'armv7l',
         'expected_system': 'Linux',
-        'expected_arch': 'arm',
+        'expected_arch': 'armv7',
+        'drm_supported': True
     },
     # Nexus Player/MiBox
     {
@@ -70,6 +74,7 @@ SYSTEMS = [
         'machine': 'arm',
         'expected_system': 'Android',
         'expected_arch': 'arm',
+        'drm_supported': True
     },
     # Windows (UWP)
     {
@@ -80,6 +85,7 @@ SYSTEMS = [
         'arch': '64bit',
         'expected_system': 'UWP',
         'expected_arch': 'x86_64',
+        'drm_supported': False
     },
     # Xbox One
     {
@@ -90,6 +96,7 @@ SYSTEMS = [
         'arch': '64bit',
         'expected_system': 'UWP',
         'expected_arch': 'x86_64',
+        'drm_supported': False
     },
 ]
 
