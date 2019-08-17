@@ -1,6 +1,7 @@
 <?xml version="1.0" ?><addon id="script.module.drmhelper" name="DRM Helper" provider-name="Aussie Add-ons" version="0.0.0">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>
+    <import addon="script.module.future"/>
   </requires>
   <extension library="lib" point="xbmc.python.module"/>
   <extension point="xbmc.addon.metadata">
