@@ -8,7 +8,7 @@ CDM_CURRENT_VERSION_URL = 'http://k.mjh.nz/.decryptmodules/modules.v2.json'
 
 WIDEVINE_CDM_URL = {
     ('Linux', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-linux-x64.zip',
-    ('Linux', 'arm'): 'https://k.mjh.nz/.decryptmodules/widevine/1.4.9.1088-linux-armv7.so',
+    ('Linux', 'armv7'): 'https://k.mjh.nz/.decryptmodules/widevine/1.4.9.1088-linux-armv7.so',
     ('Linux', 'aarch64'): 'https://k.mjh.nz/.decryptmodules/widevine/1.4.9.1088-linux-armv7.so',
     ('Windows', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-win-x64.zip',
     ('Windows', 'x86'): 'https://dl.google.com/widevine-cdm/{0}-win-ia32.zip',
@@ -17,7 +17,7 @@ WIDEVINE_CDM_URL = {
 
 UNARCHIVE_COMMAND = {
     ('Linux', 'x86_64'): '(cd {download_folder} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
-    ('Linux','arm'): '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
+    ('Linux','armv7'): '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
     ('Linux', 'aarch64'): '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
     ('Darwin', 'x86_64'): '(cd {download_folder} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
 }
@@ -48,8 +48,8 @@ ARCH_DICT = {
     'aarch64': 'aarch64',
     'aarch64_be': 'aarch64',
     'arm64': 'aarch64',
-    'arm': 'arm',
-    'armv7': 'arm',
+    'arm': 'armv7',
+    'armv7': 'armv7',
     'armv8': 'aarch64',
     'AMD64': 'x86_64',
     'x86_64': 'x86_64',
