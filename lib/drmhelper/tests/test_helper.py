@@ -52,20 +52,26 @@ class DRMHelperTests(testtools.TestCase):
                 h = helper.DRMHelper()
                 self.assertTrue(h._is_windows())
 
-    #@mock.patch('xbmc.translatePath')
-    @mock.patch.object(helper.DRMHelper, '_get_system')
-    def test_is_uwp_kodi17(self, mock_get_system):#, mock_trans_path):
+    @mock.patch('xbmc.getCondVisibility')
+    @mock.patch('xbmc.translatePath')
+    def test_is_uwp_kodi17(self, mock_trans_path, mock_cond_vis):
         for system in fakes.SYSTEMS:
             if system['system'] == 'Windows':
-                mock_get_system.return_value = 'UWP'  # Kodi <18
-                #mock_trans_path.return_value = 'foo bar 4n2hpmxwrvr6p key'
+                global HACK_PLATFORMS
+                HACK_PLATFORMS = system['platforms']
+                mock_cond_vis.side_effect = get_xbmc_cond_visibility
+                mock_trans_path.return_value = 'foo bar 4n2hpmxwrvr6p key'
                 h = helper.DRMHelper()
                 self.assertTrue(h._is_uwp())
 
+    @mock.patch('xbmc.getCondVisibility')
     @mock.patch.object(helper.DRMHelper, '_get_system')
-    def test_is_uwp_kodi18(self, mock_get_system):
+    def test_is_uwp_kodi18(self, mock_get_system, mock_cond_vis):
         for system in fakes.SYSTEMS:
             if system['system'] == 'Windows':
+                global HACK_PLATFORMS
+                HACK_PLATFORMS = system['platforms']
+                mock_cond_vis.side_effect = get_xbmc_cond_visibility
                 mock_get_system.return_value = 'UWP'
                 h = helper.DRMHelper()
                 self.assertTrue(h._is_uwp())
