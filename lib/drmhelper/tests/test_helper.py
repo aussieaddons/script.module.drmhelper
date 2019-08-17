@@ -120,29 +120,47 @@ class DRMHelperTests(testtools.TestCase):
         with mock.patch('platform.architecture', return_value=fake_arch):
             self.assertEqual(arch, fake_arch[0])
 
-    def test_get_kodi_platform(self):
-        fake_system = 'Windows'
-        fake_arch = 'x64'
-        with mock.patch.object(helper.DRMHelper, '_get_system',
-                               return_value=fake_system):
-            with mock.patch.object(helper.DRMHelper, '_get_arch',
-                                   return_value=fake_arch):
-                h = helper.DRMHelper()
-                plat = h._get_platform()
-                expected_plat = (fake_system, fake_arch)
-                self.assertEqual(plat, expected_plat)
+    @mock.patch('xbmc.getCondVisibility')
+    @mock.patch('xbmc.translatePath')
+    @mock.patch('platform.machine')
+    @mock.patch('platform.system')
+    def test_get_kodi_platform(self, mock_system, mock_machine, mock_trans_path, mock_cond_vis):
+        for system in fakes.SYSTEMS:
+            h = helper.DRMHelper()
+            global HACK_PLATFORMS
+            HACK_PLATFORMS = system['platforms']
+            mock_cond_vis.side_effect = get_xbmc_cond_visibility
+            expected_system = system.get('expected_system')
+            if expected_system == 'UWP':
+                mock_trans_path.return_value = 'foo bar 4n2hpmxwrvr6p key'
+            expected_machine = system.get('machine')
+            expected_arch = system.get('expected_arch')
+            mock_system.return_value = expected_system
+            mock_machine.return_value = expected_machine
+            observed = h._get_platform()
+            expected = (expected_system, expected_arch)
+            self.assertEqual(expected, observed)
 
-    def test_is_wv_drm_supported(self):
+    @mock.patch('xbmc.getCondVisibility')
+    @mock.patch('xbmc.translatePath')
+    @mock.patch('platform.machine')
+    @mock.patch('platform.system')
+    def test_is_wv_drm_supported(self, mock_system, mock_machine, mock_trans_path, mock_cond_vis):
         for s in fakes.SYSTEMS:
-            plat = (s.get('expected_system'), s.get('expected_arch'))
-            system = s.get('expected_system')
-            arch = s.get('expected_arch')
-            with mock.patch.object(helper.DRMHelper, '_get_platform',
-                                   return_value=plat):
-                h = helper.DRMHelper()
-                observed = h._is_wv_drm_supported()
-                expected = s.get('drm_supported')
-                self.assertEqual(expected, observed)
+            h = helper.DRMHelper()
+            global HACK_PLATFORMS
+            HACK_PLATFORMS = s['platforms']
+            mock_cond_vis.side_effect = get_xbmc_cond_visibility
+            expected_system = s.get('expected_system')
+            if expected_system == 'UWP':
+                mock_trans_path.return_value = 'foo bar 4n2hpmxwrvr6p key'
+            expected_machine = s.get('machine')
+            expected_arch = s.get('expected_arch')
+            mock_system.return_value = expected_system
+            mock_machine.return_value = expected_machine
+            observed = h._is_wv_drm_supported()
+            expected = s.get('drm_supported')
+            self.assertEqual(expected, observed)
 
     def test_is_wv_drm_not_supported(self):
         with mock.patch.object(helper.DRMHelper, '_get_platform',

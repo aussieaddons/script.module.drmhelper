@@ -66,14 +66,34 @@ SYSTEMS = [
         'expected_arch': 'armv7',
         'drm_supported': True
     },
-    # Nexus Player/MiBox
+    # MiBox
     {
         'system': 'Linux',
         'platforms': ['System.Platform.Android',
                       'System.Platform.Linux'],
-        'machine': 'arm',
+        'machine': 'aarch64',
         'expected_system': 'Android',
-        'expected_arch': 'arm',
+        'expected_arch': 'aarch64',
+        'drm_supported': True
+    },
+    # Nexus Player
+    {
+        'system': 'Linux',
+        'platforms': ['System.Platform.Android',
+                      'System.Platform.Linux'],
+        'machine': 'AMD64',
+        'expected_system': 'Android',
+        'expected_arch': 'x86_64',
+        'drm_supported': True
+    },
+    # HTC One M8
+    {
+        'system': 'Linux',
+        'platforms': ['System.Platform.Android',
+                      'System.Platform.Linux'],
+        'machine': 'armv7l',
+        'expected_system': 'Android',
+        'expected_arch': 'armv7',
         'drm_supported': True
     },
     # Windows (UWP)
@@ -81,7 +101,7 @@ SYSTEMS = [
         'system': 'Windows',
         'platforms': ['System.Platform.Windows',
                       'System.Platform.UWP'],
-        'machine': '',
+        'machine': 'AMD64',
         'arch': '64bit',
         'expected_system': 'UWP',
         'expected_arch': 'x86_64',
@@ -92,7 +112,7 @@ SYSTEMS = [
         'system': 'Windows',
         'platforms': ['System.Platform.Windows',
                       'System.Platform.UWP'],
-        'machine': '',
+        'machine': 'AMD64',
         'arch': '64bit',
         'expected_system': 'UWP',
         'expected_arch': 'x86_64',

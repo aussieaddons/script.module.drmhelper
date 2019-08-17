@@ -76,8 +76,9 @@ SUPPORTED_WV_DRM_PLATFORMS = [
     ('Linux', 'x86'),
     ('Linux', 'armv7'),
     ('Linux', 'aarch64'),
+    ('Android', 'x86_64'),
     ('Android', 'x86'),
-    ('Android', 'arm'),
+    ('Android', 'armv7'),
     ('Android', 'aarch64')
 ]
 
