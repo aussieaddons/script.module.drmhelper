@@ -5,13 +5,13 @@ import os
 from drmhelper import config
 from drmhelper import helper
 
-import fakes
-
 import mock
 
 import responses
 
 import testtools
+
+from drmhelper.tests import fakes
 
 
 def get_xbmc_cond_visibility(cond):
@@ -232,7 +232,7 @@ class DRMHelperTests(testtools.TestCase):
             fake_md5.digest_value = wvdata.get(h._lookup_mjh_plat()).get('md5')
             mock_paths.return_value = fakes.TRANSLATED_PATHS.get('Linux')
             mock_isfile.return_value = True
-            mock_open.return_value = io.BytesIO('bar')
+            mock_open.return_value = io.BytesIO(b'bar')
             expected = wvdata.get(h._lookup_mjh_plat()).get('src')
             observed = h._check_wv_cdm_version_current()
             self.assertEqual(expected, observed)
@@ -258,7 +258,7 @@ class DRMHelperTests(testtools.TestCase):
         mock_arch.return_value = 'x86_64'
         mock_paths.return_value = fakes.TRANSLATED_PATHS.get('Linux')
         mock_isfile.return_value = True
-        mock_open.return_value = io.BytesIO('bar')
+        mock_open.return_value = io.BytesIO(b'bar')
         expected = False
         observed = h._check_wv_cdm_version_current()
         self.assertEqual(expected, observed)
