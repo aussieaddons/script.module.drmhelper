@@ -195,10 +195,30 @@ TRANS_PATH_ARGS = [
     'special://home/'
 ]
 
-TRANSLATED_PATHS = {
-    'Linux': ['/storage/.kodi/addons/inputstream.adaptive',
-              '/storage/.kodi/cdm'],
-    'Windows': ['C:/Program Files (x86)/Kodi/addons/inputstream.adaptive',
-                'C:/Users/user/AppData/Roaming/Kodi/cdm'],
-    'Darwin': ['/Users/User/Library/Application Support/Kodi/cdm/']
+TRANSLATED_SPECIAL_PATHS = {
+    'Linux': '/storage/.kodi/cdm',
+    'Windows': 'C:/Users/user/AppData/Roaming/Kodi/cdm',
+    'Darwin': '/Users/User/Library/Application Support/Kodi/cdm/'
+}
+
+CDM_PATHS = {
+    'Linux': [
+        '/storage/.kodi/addons/inputstream.adaptive',
+        '/storage/.kodi/cdm'
+    ],
+    'Windows': [
+        'C:/Program Files (x86)/Kodi/addons/inputstream.adaptive',
+        'C:/Users/user/AppData/Roaming/Kodi/cdm'
+    ],
+    'Darwin': [
+        '/Users/User/Library/Application '
+        'Support/Kodi/addons/inputstream.adaptive',
+        '/Users/User/Library/Application Support/Kodi/cdm/'
+    ]
+}
+
+HOME_PATHS = {
+    'Linux': '/home/user/.kodi',
+    'Windows': 'C:/Users/user/AppData/Roaming/Kodi',
+    'Darwin': '/Users/user/Library/Application Support/Kodi'
 }

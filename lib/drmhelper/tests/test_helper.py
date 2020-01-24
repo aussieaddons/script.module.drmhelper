@@ -20,8 +20,13 @@ def get_xbmc_cond_visibility(cond):
 
 
 def get_trans_path(path, system):
-    index = fakes.TRANS_PATH_ARGS.index(path)
-    return fakes.TRANSLATED_PATHS.get(system)[index]
+    if path.startswith('special://'):
+        if path == 'special://home/':
+            return fakes.HOME_PATHS.get(system)
+        else:
+            return fakes.TRANSLATED_SPECIAL_PATHS.get(system)
+    else:
+        return path
 
 
 class DRMHelperTests(testtools.TestCase):
@@ -178,15 +183,23 @@ class DRMHelperTests(testtools.TestCase):
             result = h._get_wvcdm_filename()
             self.assertEqual(result, wvcdm_filename)
 
-    def test_get_wvcdm_paths(self):
+    @mock.patch.object(fakes.FakeAddon, 'getSetting')
+    @mock.patch('xbmc.translatePath')
+    def test_get_wvcdm_paths(self, translate_path, fake_setting):
         for system in fakes.SYSTEMS:
-            rv = fakes.TRANSLATED_PATHS.get(system.get('system'))
-            with mock.patch.object(
-                    helper.DRMHelper, '_get_wvcdm_paths', return_value=rv):
-                fake_addon = fakes.FakeAddon()
-                h = helper.DRMHelper()
-                cdm_paths = h._get_wvcdm_paths(fake_addon)
-                self.assertEqual(rv[0], cdm_paths[0])
+            sys_name = system.get('system')
+
+            def get_trnspath(path):
+                return get_trans_path(path, sys_name)
+
+            translate_path.side_effect = get_trnspath
+            fake_setting.side_effect = lambda \
+                x: fakes.TRANSLATED_SPECIAL_PATHS.get(sys_name)
+            fake_addon = fakes.FakeAddon()
+            h = helper.DRMHelper()
+            observed = h._get_wvcdm_paths(fake_addon)
+            self.assertEqual([fakes.TRANSLATED_SPECIAL_PATHS.get(sys_name),
+                              fakes.CDM_PATHS.get(sys_name)[1]], observed)
 
     @responses.activate
     @mock.patch.object(helper.DRMHelper, '_get_kodi_arch')
@@ -233,7 +246,8 @@ class DRMHelperTests(testtools.TestCase):
             mock_system.return_value = expected_system
             mock_arch.return_value = expected_arch
             fake_md5.digest_value = wvdata.get(h._lookup_mjh_plat()).get('md5')
-            mock_paths.return_value = fakes.TRANSLATED_PATHS.get('Linux')
+            mock_paths.return_value = fakes.TRANSLATED_SPECIAL_PATHS.get(
+                'Linux')
             mock_isfile.return_value = True
             mock_open.return_value = io.BytesIO(b'bar')
             expected = wvdata.get(h._lookup_mjh_plat()).get('src')
@@ -259,7 +273,7 @@ class DRMHelperTests(testtools.TestCase):
         fake_md5.digest_value = 'abc123'
         mock_system.return_value = 'Linux'
         mock_arch.return_value = 'x86_64'
-        mock_paths.return_value = fakes.TRANSLATED_PATHS.get('Linux')
+        mock_paths.return_value = fakes.TRANSLATED_SPECIAL_PATHS.get('Linux')
         mock_isfile.return_value = True
         mock_open.return_value = io.BytesIO(b'bar')
         expected = False
@@ -269,7 +283,7 @@ class DRMHelperTests(testtools.TestCase):
     @mock.patch('tempfile.TemporaryFile')
     def test_get_wv_cdm_path(self, temp_file):
         for system in fakes.SYSTEMS:
-            rv = fakes.TRANSLATED_PATHS.get(system.get('system'))
+            rv = fakes.TRANSLATED_SPECIAL_PATHS.get(system.get('system'))
             with mock.patch.object(
                     helper.DRMHelper, '_get_wvcdm_paths', return_value=rv):
                 fake_addon = fakes.FakeAddon()
@@ -311,7 +325,7 @@ class DRMHelperTests(testtools.TestCase):
                 fakes.TRANS_PATH_ARGS[0], s.get('system'))
             with mock.patch.object(
                     helper.DRMHelper, '_get_wvcdm_paths',
-                    return_value=fakes.TRANSLATED_PATHS.get(s.get('system'))):
+                    return_value=fakes.CDM_PATHS.get(s.get('system'))):
                 with mock.patch.object(helper.DRMHelper, '_get_system',
                                        return_value=s.get('expected_system')):
                     with mock.patch.object(

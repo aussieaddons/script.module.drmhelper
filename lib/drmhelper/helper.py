@@ -140,7 +140,9 @@ class DRMHelper(object):
         return config.WIDEVINE_CDM_DICT.get(self._get_system())
 
     def _get_wvcdm_paths(self, addon):
-        return [eval(x) for x in config.CDM_PATHS]
+        _globals = globals()
+        _locals = locals()
+        return [eval(x, _globals, _locals) for x in config.CDM_PATHS]
 
     def _get_home_folder(self):
         return xbmc.translatePath('special://home/')
