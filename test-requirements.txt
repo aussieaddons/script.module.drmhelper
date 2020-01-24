@@ -4,4 +4,4 @@ pytest
 requests
 responses
 future
-git+https://github.com/romanvm/Kodistubs.git#egg=Kodistubs
+git+https://github.com/glennguy/Kodistubs.git@python3#egg=Kodistubs

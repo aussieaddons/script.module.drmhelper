@@ -2,15 +2,14 @@ import io
 import json
 import os
 
-from drmhelper import config
-from drmhelper import helper
-
 import mock
 
 import responses
 
 import testtools
 
+from drmhelper import config
+from drmhelper import helper
 from drmhelper.tests import fakes
 
 
@@ -124,7 +123,8 @@ class DRMHelperTests(testtools.TestCase):
     @mock.patch('xbmc.translatePath')
     @mock.patch('platform.machine')
     @mock.patch('platform.system')
-    def test_get_kodi_platform(self, mock_system, mock_machine, mock_trans_path, mock_cond_vis):
+    def test_get_kodi_platform(self, mock_system, mock_machine,
+                               mock_trans_path, mock_cond_vis):
         for system in fakes.SYSTEMS:
             h = helper.DRMHelper()
             global HACK_PLATFORMS
@@ -145,7 +145,8 @@ class DRMHelperTests(testtools.TestCase):
     @mock.patch('xbmc.translatePath')
     @mock.patch('platform.machine')
     @mock.patch('platform.system')
-    def test_is_wv_drm_supported(self, mock_system, mock_machine, mock_trans_path, mock_cond_vis):
+    def test_is_wv_drm_supported(self, mock_system, mock_machine,
+                                 mock_trans_path, mock_cond_vis):
         for s in fakes.SYSTEMS:
             h = helper.DRMHelper()
             global HACK_PLATFORMS
@@ -155,7 +156,6 @@ class DRMHelperTests(testtools.TestCase):
             if expected_system == 'UWP':
                 mock_trans_path.return_value = 'foo bar 4n2hpmxwrvr6p key'
             expected_machine = s.get('machine')
-            expected_arch = s.get('expected_arch')
             mock_system.return_value = expected_system
             mock_machine.return_value = expected_machine
             observed = h._is_wv_drm_supported()
@@ -201,7 +201,8 @@ class DRMHelperTests(testtools.TestCase):
             mock_system.return_value = expected_system
             mock_kodi_arch.return_value = expected_arch
             h._set_wvcdm_current_ver_data()
-            expected = json.loads(self.MODULE_JSON)['widevine']['platforms'].get(h._lookup_mjh_plat())
+            expected = json.loads(self.MODULE_JSON)['widevine'][
+                'platforms'].get(h._lookup_mjh_plat())
             observed = h.wvcdm_download_data
             self.assertEqual(expected, observed)
 
@@ -214,7 +215,9 @@ class DRMHelperTests(testtools.TestCase):
     @mock.patch('drmhelper.helper.DRMHelper._get_wvcdm_paths')
     @mock.patch('drmhelper.helper.builtins.open')
     @mock.patch('os.path.isfile')
-    def test_check_wvcdm_version_current(self, mock_isfile, mock_open, mock_paths, mock_system, mock_arch, mock_platform, mock_md5):
+    def test_check_wvcdm_version_current(self, mock_isfile, mock_open,
+                                         mock_paths, mock_system, mock_arch,
+                                         mock_platform, mock_md5):
         responses.add(responses.GET, config.CDM_CURRENT_VERSION_URL,
                       body=self.MODULE_JSON)
         h = helper.DRMHelper()
@@ -328,7 +331,6 @@ class DRMHelperTests(testtools.TestCase):
                             dialog.assert_called_once()
                             dialog.reset_mock()
                             prog_download.assert_called_once()
-                            #print(prog_download.call_args)
                             prog_download.reset_mock()
                             assert cdm_command.called or rename_win.called
                             cdm_command.reset_mock()

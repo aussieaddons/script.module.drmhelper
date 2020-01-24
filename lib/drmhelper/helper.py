@@ -4,15 +4,14 @@ import os
 import platform
 import posixpath
 import tempfile
-import zipfile
 from pipes import quote
 
 import future.moves.builtins as builtins
 
+import requests
+
 from drmhelper import config
 from drmhelper import utils
-
-import requests
 
 import xbmc
 import xbmcaddon  # noqa: I201
@@ -244,7 +243,6 @@ class DRMHelper(object):
         plat = self._lookup_mjh_plat()
         self.wvcdm_download_data = json_data['platforms'].get(plat)
 
-
     def _check_wv_cdm_version_current(self):
         self._set_wvcdm_current_ver_data()
         cdm_fn = self._get_wvcdm_filename()
@@ -392,7 +390,8 @@ class DRMHelper(object):
         plat = self._get_platform()
         self._set_wvcdm_current_ver_data()
 
-        url = os.path.join(self.wvcdm_download_base_url, self.wvcdm_download_data.get('src'))
+        url = os.path.join(self.wvcdm_download_base_url,
+                           self.wvcdm_download_data.get('src'))
         filename = url.split('/')[-1]
         wv_cdm_fn = self._get_wvcdm_filename()
 

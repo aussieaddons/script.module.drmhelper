@@ -1,9 +1,8 @@
-from drmhelper import utils
-
 import mock
 
 import testtools
 
+from drmhelper import utils
 from drmhelper.tests import fakes
 
 import xbmc

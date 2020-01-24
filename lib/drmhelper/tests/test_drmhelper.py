@@ -1,6 +1,6 @@
-import drmhelper
-
 import testtools
+
+import drmhelper
 
 
 class DRMHelperTests(testtools.TestCase):
