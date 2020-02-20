@@ -1,13 +1,31 @@
 {
     "widevine" : {
-        "base_url" : "https://k.mjh.nz/.decryptmodules/widevine/",
+        "base_url" : "https://k.slyguy.xyz/.decryptmodules/widevine/",
         "platforms": {
-            "Linuxarmv7"   : {"src": "4.10.1440.18-linux-armv7.so", "dst": "libwidevinecdm.so",    "md5": "41c94b9ffa735fe4f412b7e9283dd2ff"},
-            "Linuxi386"    : {"src": "4.10.1440.18-linux-ia32.so",  "dst": "libwidevinecdm.so",    "md5": "60ae5514a0dd6595993dd7bdd50d1dad"},
-            "Linuxx86_64"  : {"src": "4.10.1440.18-linux-x64.so",   "dst": "libwidevinecdm.so",    "md5": "995a6544b32b7d06ac6159aad878a8a0"},
-            "Darwinx86_64" : {"src": "4.10.1440.18-mac-x64.dylib",  "dst": "libwidevinecdm.dylib", "md5": "68d048c7277e153e6d884583183c52d1"},
-            "Windows32bit" : {"src": "4.10.1440.18-win-ia32.dll",   "dst": "widevinecdm.dll",      "md5": "f634756cf6a4be877fc71120738ac7f3"},
-            "Windows64bit" : {"src": "4.10.1440.18-win-x64.dll",    "dst": "widevinecdm.dll",      "md5": "5dc1fbe9b3b1e923615dfc249be3ee7b"}
+            "Linuxarmv7"   : [
+                {"ver": "4.10.1503.4", "src": "4.10.1503.4-linux-armv7.so", "md5": "a1a4570b07cb6916e85d261832d76e29"},
+                {"ver": "4.10.1440.18", "src": "4.10.1440.18-linux-armv7.so", "md5": "41c94b9ffa735fe4f412b7e9283dd2ff"}
+            ],
+            "Linuxi386"    : [
+                {"ver": "4.10.1582.2", "src": "4.10.1582.2-linux-ia32.so",  "md5": "d24f148e7897df2b0700a7f833d16f63"},
+                {"ver": "4.10.1440.19", "src": "4.10.1440.19-linux-ia32.so",  "md5": "60ae5514a0dd6595993dd7bdd50d1dad"}
+            ],
+            "Linuxx86_64"  : [
+                {"ver": "4.10.1582.2", "src": "4.10.1582.2-linux-x64.so",   "md5": "8cae0f578299f67165b2da4600298ded"},
+                {"ver": "4.10.1440.19", "src": "4.10.1440.19-linux-x64.so",   "md5": "995a6544b32b7d06ac6159aad878a8a0"}
+            ],
+            "Darwinx86_64" : [
+                {"ver": "4.10.1582.2", "src": "4.10.1582.2-mac-x64.dylib",  "md5": "5c29d6a2ed63b1c072f40023d88aebf9"},
+                {"ver": "4.10.1440.19", "src": "4.10.1440.19-mac-x64.dylib",  "md5": "d51e5f53cbffa29fab988300f1f55499"}
+            ],
+            "Windows32bit" : [
+                {"ver": "4.10.1582.2", "src": "4.10.1582.2-win-ia32.dll",   "md5": "2c7a3b4c1883fae5d8a71cd43a5a20af"},
+                {"ver": "4.10.1440.19", "src": "4.10.1440.19-win-ia32.dll",   "md5": "f634756cf6a4be877fc71120738ac7f3"}
+            ],
+            "Windows64bit" : [
+                {"ver": "4.10.1582.2", "src": "4.10.1582.2-win-x64.dll",    "md5": "e2ece2e61f18b9278f27032c1a5578ea"},
+                {"ver": "4.10.1440.19", "src": "4.10.1440.19-win-x64.dll",    "md5": "5dc1fbe9b3b1e923615dfc249be3ee7b"}
+            ]
         }
     }
 }

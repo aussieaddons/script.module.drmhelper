@@ -202,9 +202,9 @@ class DRMHelperTests(testtools.TestCase):
                               fakes.CDM_PATHS.get(sys_name)[1]], observed)
 
     @responses.activate
-    @mock.patch.object(helper.DRMHelper, '_get_kodi_arch')
+    @mock.patch.object(helper.DRMHelper, '_get_arch')
     @mock.patch.object(helper.DRMHelper, '_get_system')
-    def test_set_wvcdm_current_ver_data(self, mock_system, mock_kodi_arch):
+    def test_set_wvcdm_current_ver_data(self, mock_system, mock_arch):
         responses.add(responses.GET, config.CDM_CURRENT_VERSION_URL,
                       body=self.MODULE_JSON)
         h = helper.DRMHelper()
@@ -212,10 +212,12 @@ class DRMHelperTests(testtools.TestCase):
             expected_system = system.get('expected_system')
             expected_arch = system.get('expected_arch')
             mock_system.return_value = expected_system
-            mock_kodi_arch.return_value = expected_arch
+            mock_arch.return_value = expected_arch
+            if expected_system in ['Android', 'UWP']:
+                continue
             h._set_wvcdm_current_ver_data()
             expected = json.loads(self.MODULE_JSON)['widevine'][
-                'platforms'].get(h._lookup_mjh_plat())
+                'platforms'].get(h._lookup_mjh_plat())[0]
             observed = h.wvcdm_download_data
             self.assertEqual(expected, observed)
 
@@ -245,12 +247,13 @@ class DRMHelperTests(testtools.TestCase):
                 continue
             mock_system.return_value = expected_system
             mock_arch.return_value = expected_arch
-            fake_md5.digest_value = wvdata.get(h._lookup_mjh_plat()).get('md5')
+            fake_md5.digest_value = wvdata.get(
+                h._lookup_mjh_plat())[0].get('md5')
             mock_paths.return_value = fakes.TRANSLATED_SPECIAL_PATHS.get(
                 'Linux')
             mock_isfile.return_value = True
             mock_open.return_value = io.BytesIO(b'bar')
-            expected = wvdata.get(h._lookup_mjh_plat()).get('src')
+            expected = wvdata.get(h._lookup_mjh_plat())[0].get('src')
             observed = h._check_wv_cdm_version_current()
             self.assertEqual(expected, observed)
 

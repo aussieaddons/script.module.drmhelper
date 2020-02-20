@@ -243,7 +243,7 @@ class DRMHelper(object):
         json_data = json.loads(data).get('widevine')
         self.wvcdm_download_base_url = json_data.get('base_url')
         plat = self._lookup_mjh_plat()
-        self.wvcdm_download_data = json_data['platforms'].get(plat)
+        self.wvcdm_download_data = json_data['platforms'].get(plat)[0]
 
     def _check_wv_cdm_version_current(self):
         self._set_wvcdm_current_ver_data()
