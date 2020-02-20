@@ -4,16 +4,7 @@ DRM_INFO = 'http://aussieaddons.com/drm'
 
 REPO_BASE = 'https://github.com/aussieaddons/repo-binary/raw/master/'
 
-CDM_CURRENT_VERSION_URL = 'http://k.mjh.nz/.decryptmodules/modules.v2.json'
-
-WIDEVINE_CDM_URL = {
-    ('Linux', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-linux-x64.zip',
-    ('Linux', 'armv7'): 'https://k.mjh.nz/.decryptmodules/widevine/1.4.9.1088-linux-armv7.so',
-    ('Linux', 'aarch64'): 'https://k.mjh.nz/.decryptmodules/widevine/1.4.9.1088-linux-armv7.so',
-    ('Windows', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-win-x64.zip',
-    ('Windows', 'x86'): 'https://dl.google.com/widevine-cdm/{0}-win-ia32.zip',
-    ('Darwin', 'x86_64'): 'https://dl.google.com/widevine-cdm/{0}-mac-x64.zip'
-}
+CDM_CURRENT_VERSION_URL = 'https://k.slyguy.xyz/.decryptmodules/modules.json'
 
 UNARCHIVE_COMMAND = {
     ('Linux', 'x86_64'): '(cd {download_folder} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
