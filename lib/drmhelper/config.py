@@ -7,10 +7,10 @@ REPO_BASE = 'https://github.com/aussieaddons/repo-binary/raw/master/'
 CDM_CURRENT_VERSION_URL = 'https://k.slyguy.xyz/.decryptmodules/modules.json'
 
 UNARCHIVE_COMMAND = {
-    ('Linux', 'x86_64'): '(cd {download_folder} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
-    ('Linux','armv7'): '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
+    ('Linux', 'x86_64'):  '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
+    ('Linux','armv7'):    '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
     ('Linux', 'aarch64'): '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
-    ('Darwin', 'x86_64'): '(cd {download_folder} && unzip {filename} {wvcdm_filename} -d {cdm_path} && chmod 755 {cdm_path}/{wvcdm_filename} && rm -f {filename})',
+    ('Darwin', 'x86_64'): '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
 }
 
 CDM_PATHS = [
