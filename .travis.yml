@@ -1,5 +1,4 @@
 language: python
-python: 2.7
 env:
   global:
   - secure: fhIHFHOdj9GtJdMrxIQEgpbMv5oEMqT9eaaUdGhXOmzWRJKdPHlGgTt7gKhAoYNzAO5irLXQw96lMVKXPLDa4VAeGvP6IfrupqhkP0GlY3OxXAmZjP8+9eZMC6rzGoWb5h4ep+cMKfi27+NzMK+eZ2CGXlqx4b7UeBIk2JEE61AU60/xX21Vrc7ccREk8eskzTzQ5TEgTfJdgy2RQSg+keerlhFqxJarJ3CZyhtPqmEpDF/UDwCLpuuXKxsHL8TbR2JIWNXrJmAYiG6IZ4q4PBLWx0ydKW4LslGbpiu3r0TI/1+bQAZ5BG+MmLfqyrAQsgyoLAY2pd3V+e0BvG1Xo+hfGFp/igXgcHPejS7Ef6LZtGAB/ippBouIotfwEMmx6bl9JSaWAKXTJtB5GnVYqJvHf8adtYz6neggDZZmiWXLZFCqVFfo2jEfU8o/EjSN/wF1CYkiVOr8FflTKKYZrPBk28ltoWwX17GqUul/2iG3+AwnyM900Hx8FFxpVcr8WRWM1V3gCEPo+Mu3IAgnV5Xz3BEudzvGleYr+73YRE199D6TF2UYjX1Jg8Tz/THJwxT7TAkUdSGKv2saeMZ0GdPhJ7sXffEx0jCAypYGZOvGD7tVFSBBDXV0A3KjTTBo67XT3gx3wZWZgCjuh/dUknscqcOXO3FMXv6xhYpH6bM=
@@ -17,7 +16,7 @@ script:
   - >
     git clone https://github.com/aussieaddons/repo-devel.git $TRAVIS_BUILD_DIR/.deploy-devel &&
     cd $TRAVIS_BUILD_DIR/.deploy-devel &&
-    ./manage_repo.py $TRAVIS_BUILD_DIR || travis_terminate 1
+    ./manage_repo.py $TRAVIS_BUILD_DIR -b leia matrix || travis_terminate 1
   - git config credential.helper "store --file=.git/credentials"
   - echo "https://${GH_TOKEN}:@github.com" > .git/credentials
   - >
