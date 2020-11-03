@@ -42,7 +42,7 @@ def log(message):
     """Logging helper"""
     xbmc.log("[%s v%s] %s" % (
         get_addon_name(), get_addon_version(), message),
-             level=xbmc.LOGNOTICE)
+             level=xbmc.LOGINFO)
 
 
 def get_kodi_build():

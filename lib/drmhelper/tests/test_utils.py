@@ -18,7 +18,7 @@ class UtilsTests(testtools.TestCase):
     def test_log(self, mock_log, mock_addon):
         utils.log('foo')
         mock_log.assert_called_once_with('[Test Add-on v0.0.1] foo',
-                                         level=xbmc.LOGNOTICE)
+                                         level=xbmc.LOGINFO)
 
     def test_get_info_label(self):
         with mock.patch('xbmc.getInfoLabel', return_value='foo'):

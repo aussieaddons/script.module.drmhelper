@@ -42,9 +42,9 @@ SYSTEMS = [
         'system': 'Windows',
         'platforms': ['System.Platform.Windows'],
         'machine': 'AMD64',
-        'arch': '32bit',
+        'arch': '64bit',
         'expected_system': 'Windows',
-        'expected_arch': 'x86',
+        'expected_arch': 'x86_64',
         'drm_supported': True
     },
     # Generic Mac OS X
