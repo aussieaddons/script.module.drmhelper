@@ -220,7 +220,7 @@ class DRMHelperTests(testtools.TestCase):
                 continue
             h._set_wvcdm_current_ver_data()
             expected = json.loads(self.MODULE_JSON)['widevine'][
-                'platforms'].get(h._lookup_mjh_plat())[0]
+                'platforms'].get(h._lookup_mjh_plat())
             observed = h.wvcdm_download_data
             self.assertEqual(expected, observed)
 
@@ -250,15 +250,15 @@ class DRMHelperTests(testtools.TestCase):
                 continue
             mock_system.return_value = expected_system
             mock_arch.return_value = expected_arch
-            fake_md5.digest_value = wvdata.get(
-                h._lookup_mjh_plat())[0].get('md5')
             mock_paths.return_value = fakes.TRANSLATED_SPECIAL_PATHS.get(
                 'Linux')
             mock_isfile.return_value = True
             mock_open.return_value = io.BytesIO(b'bar')
-            expected = wvdata.get(h._lookup_mjh_plat())[0].get('src')
-            observed = h._check_wv_cdm_version_current()
-            self.assertEqual(expected, observed)
+            for entry in wvdata.get(h._lookup_mjh_plat()):
+                fake_md5.digest_value = entry.get('md5')
+                expected = True
+                observed = h._check_wv_cdm_version_current()
+                self.assertEqual(expected, observed)
 
     @responses.activate
     @mock.patch.object(helper.hashlib, 'md5')

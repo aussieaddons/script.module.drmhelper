@@ -243,7 +243,7 @@ class DRMHelper(object):
         json_data = json.loads(data).get('widevine')
         self.wvcdm_download_base_url = json_data.get('base_url')
         plat = self._lookup_mjh_plat()
-        self.wvcdm_download_data = json_data['platforms'].get(plat)[0]
+        self.wvcdm_download_data = json_data['platforms'].get(plat)
 
     def _check_wv_cdm_version_current(self):
         self._set_wvcdm_current_ver_data()
@@ -253,10 +253,10 @@ class DRMHelper(object):
             path = os.path.join(p, cdm_fn)
             if os.path.isfile(path):
                 md5 = hashlib.md5(builtins.open(path, 'rb').read()).hexdigest()
-                if md5 == self.wvcdm_download_data.get('md5'):
-                    return self.wvcdm_download_data.get('src')
-                else:
-                    return False
+                for entry in self.wvcdm_download_data:
+                    if md5 == entry.get('md5'):
+                        return True
+        return False
 
     def check_inputstream(self, drm=True):
         """Check InputStream Adaptive is installed and ready
@@ -393,7 +393,7 @@ class DRMHelper(object):
         self._set_wvcdm_current_ver_data()
 
         url = os.path.join(self.wvcdm_download_base_url,
-                           self.wvcdm_download_data.get('src'))
+                           self.wvcdm_download_data[0].get('src'))
         filename = url.split('/')[-1]
         wv_cdm_fn = self._get_wvcdm_filename()
 
