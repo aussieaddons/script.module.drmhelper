@@ -450,7 +450,7 @@ class DRMHelper(object):
         if not display_filename:
             display_filename = download_path.split()[-1]
         dp.create("Downloading {0}".format(display_filename),
-                  "Downloading File", url)
+                  "Downloading File: {0}".format(url))
 
         with builtins.open(download_path, 'wb') as f:
             chunk_size = 1024
