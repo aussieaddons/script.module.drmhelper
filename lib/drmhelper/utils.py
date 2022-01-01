@@ -9,6 +9,14 @@ import xbmcaddon
 import xbmcgui
 
 
+def translate_path(path):
+    if get_kodi_major_version() > 19:
+        import xbmcvfs
+        return xbmcvfs.translatePath(path)
+    else:
+        return xbmc.translatePath(path)
+
+
 def get_info_label(label, attempts=0):
     """Get XBMC info label
 
@@ -70,7 +78,10 @@ def get_kodi_version():
 def get_kodi_major_version():
     """Return the major version number of Kodi"""
     version = get_kodi_version().split('.')[0]
-    return int(version)
+    if version:
+        return int(version)
+    else:
+        return 0
 
 
 def get_kodi_name():

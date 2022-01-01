@@ -14,8 +14,8 @@ UNARCHIVE_COMMAND = {
 }
 
 CDM_PATHS = [
-    "xbmc.translatePath('special://xbmcbinaddons/inputstream.adaptive')",
-    "xbmc.translatePath(addon.getSetting('DECRYPTERPATH'))"
+    "utils.translate_path('special://xbmcbinaddons/inputstream.adaptive')",
+    "utils.translate_path(addon.getSetting('DECRYPTERPATH'))"
 ]
 
 DEFAULT_CDM_PATH = 'special://home/cdm'

@@ -31,7 +31,7 @@ class DRMHelper(object):
         if xbmc.getCondVisibility('System.Platform.UWP'):
             return 'UWP'
 
-        if '4n2hpmxwrvr6p' in xbmc.translatePath('special://xbmc'):
+        if '4n2hpmxwrvr6p' in utils.translate_path('special://xbmc'):
             # Look for this app key in the path, which is the only reliable
             # way we can tell if it's a special UWP build on Kodi v17
             return 'UWP'
@@ -145,7 +145,7 @@ class DRMHelper(object):
         return [eval(x, _globals, _locals) for x in config.CDM_PATHS]
 
     def _get_home_folder(self):
-        return xbmc.translatePath('special://home/')
+        return utils.translate_path('special://home/')
 
     @classmethod
     def _execute_json_rpc(cls, method, params):
@@ -354,7 +354,7 @@ class DRMHelper(object):
             tempfile.TemporaryFile(dir=cdm_paths[0])
             cdm_path = cdm_paths[0]
         except OSError:
-            cdm_path = xbmc.translatePath(config.DEFAULT_CDM_PATH)
+            cdm_path = utils.translate_path(config.DEFAULT_CDM_PATH)
             addon.setSetting('DECRYPTERPATH', config.DEFAULT_CDM_PATH)
         return cdm_path
 
