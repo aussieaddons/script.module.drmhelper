@@ -4,7 +4,7 @@ DRM_INFO = 'http://aussieaddons.com/drm'
 
 REPO_BASE = 'https://github.com/aussieaddons/repo-binary/raw/master/'
 
-CDM_CURRENT_VERSION_URL = 'https://k.slyguy.xyz/.decryptmodules/modules.json'
+CDM_CURRENT_VERSION_URL = 'https://slyguy.uk/.decryptmodules/modules.json'
 
 UNARCHIVE_COMMAND = {
     ('Linux', 'x86_64'):  '(cd {download_folder} && mv {filename} {cdm_path}/{wvcdm_filename} && chmod 755 {cdm_path}/{wvcdm_filename})',
