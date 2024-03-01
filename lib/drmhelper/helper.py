@@ -22,7 +22,6 @@ class DRMHelper(object):
     """DRM Helper"""
     def __init__(self):
         self.addon = None
-        self.wvcdm_download_base_url = None
         self.wvcdm_download_data = None
 
     def _get_system(self):
@@ -241,7 +240,6 @@ class DRMHelper(object):
     def _set_wvcdm_current_ver_data(self):
         data = requests.get(config.CDM_CURRENT_VERSION_URL).text
         json_data = json.loads(data).get('widevine')
-        self.wvcdm_download_base_url = json_data.get('base_url')
         plat = self._lookup_mjh_plat()
         self.wvcdm_download_data = json_data['platforms'].get(plat)
 
@@ -392,9 +390,8 @@ class DRMHelper(object):
         plat = self._get_platform()
         self._set_wvcdm_current_ver_data()
 
-        url = os.path.join(self.wvcdm_download_base_url,
-                           self.wvcdm_download_data[0].get('src'))
-        filename = url.split('/')[-1]
+        filename = self.wvcdm_download_data[0].get('src')
+        url = os.path.dirname(config.CDM_CURRENT_VERSION_URL) + '/widevine/' + filename
         wv_cdm_fn = self._get_wvcdm_filename()
 
         if not os.path.isdir(cdm_path):
